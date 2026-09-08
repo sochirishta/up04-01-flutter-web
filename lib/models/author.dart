@@ -1,31 +1,53 @@
 class Author {
   final int id;
-  final String firstName;
-  final String lastName;
+  final String fullName;
+  final int birthYear;
   final String country;
   final DateTime? deletedAt;
 
   const Author({
     required this.id,
-    required this.firstName,
-    required this.lastName,
+    required this.fullName,
+    required this.birthYear,
     required this.country,
     this.deletedAt,
   });
 
   bool get isDeleted => deletedAt != null;
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'fullName': fullName,
+      'birthYear': birthYear,
+      'country': country,
+      'deletedAt': deletedAt?.toIso8601String(),
+    };
+  }
+
+  factory Author.fromJson(Map<String, dynamic> json) {
+    return Author(
+      id: json['id'] as int? ?? 0,
+      fullName: json['fullName'] as String? ?? '',
+      birthYear: json['birthYear'] as int? ?? 0,
+      country: json['country'] as String? ?? '',
+      deletedAt: json['deletedAt'] == null
+          ? null
+          : DateTime.tryParse(json['deletedAt'] as String),
+    );
+  }
+
   Author copyWith({
-    String? firstName,
-    String? lastName,
+    String? fullName,
+    int? birthYear,
     String? country,
     DateTime? deletedAt,
     bool clearDeletedAt = false,
   }) {
     return Author(
       id: id,
-      firstName: firstName ?? this.firstName,
-      lastName: lastName ?? this.lastName,
+      fullName: fullName ?? this.fullName,
+      birthYear: birthYear ?? this.birthYear,
       country: country ?? this.country,
       deletedAt: clearDeletedAt ? null : (deletedAt ?? this.deletedAt),
     );
@@ -35,50 +57,50 @@ class Author {
 const seedAuthors = <Author>[
   Author(
     id: 1,
-    firstName: 'Лев',
-    lastName: 'Толстой',
+    fullName: 'Лев Толстой',
+    birthYear: 1828,
     country: 'Россия',
   ),
   Author(
     id: 2,
-    firstName: 'Фёдор',
-    lastName: 'Достоевский',
+    fullName: 'Фёдор Достоевский',
+    birthYear: 1821,
     country: 'Россия',
   ),
   Author(
     id: 3,
-    firstName: 'Антон',
-    lastName: 'Чехов',
+    fullName: 'Антон Чехов',
+    birthYear: 1860,
     country: 'Россия',
   ),
   Author(
     id: 4,
-    firstName: 'Джордж',
-    lastName: 'Оруэлл',
+    fullName: 'Джордж Оруэлл',
+    birthYear: 1903,
     country: 'Великобритания',
   ),
   Author(
     id: 5,
-    firstName: 'Эрнест',
-    lastName: 'Хемингуэй',
+    fullName: 'Эрнест Хэмингуей',
+    birthYear: 1899,
     country: 'США',
   ),
   Author(
     id: 6,
-    firstName: 'Франц',
-    lastName: 'Кафка',
+    fullName: 'Франц Кафка',
+    birthYear: 1920,
     country: 'Чехия',
   ),
   Author(
     id: 7,
-    firstName: 'Рэй',
-    lastName: 'Брэдбери',
+    fullName: 'Рэй Брэдбери',
+    birthYear: 1920,
     country: 'США',
   ),
   Author(
     id: 8,
-    firstName: 'Габриэль',
-    lastName: 'Гарсиа Маркес',
+    fullName: 'Габриэль Гарсиа Маркес',
+    birthYear: 1927,
     country: 'Колумбия',
   ),
 ];

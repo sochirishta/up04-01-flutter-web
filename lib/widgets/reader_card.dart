@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../models/author.dart';
+import '../models/reader.dart';
 
-class AuthorCard extends StatelessWidget {
-  final Author author;
+class ReaderCard extends StatelessWidget {
+  final Reader reader;
   final bool selected;
   final VoidCallback onSelectionChanged;
   final VoidCallback onOpen;
@@ -11,9 +11,9 @@ class AuthorCard extends StatelessWidget {
   final VoidCallback? onRestore;
   final VoidCallback? onHardDelete;
 
-  const AuthorCard({
+  const ReaderCard({
     super.key,
-    required this.author,
+    required this.reader,
     required this.selected,
     required this.onSelectionChanged,
     required this.onOpen,
@@ -27,49 +27,50 @@ class AuthorCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
         onTap: onOpen,
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+            CrossAxisAlignment.start,
             children: [
               Checkbox(
                 value: selected,
-                onChanged: (_) {
-                  onSelectionChanged();
-                },
+                onChanged: (_) =>
+                    onSelectionChanged(),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment:
+                  CrossAxisAlignment.start,
                   children: [
                     Text(
-                      author.fullName,
+                      reader.fullName,
                       style: Theme.of(context)
                           .textTheme
                           .titleMedium,
                     ),
                     const SizedBox(height: 6),
-                    Text('Год рождения: ${author.birthYear}'),
-                    Text('Страна: ${author.country}'),
-
-                    if (author.isDeleted) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        'Удалён',
-                        style: TextStyle(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .error,
-                          fontWeight: FontWeight.w600,
+                    Text(reader.email),
+                    Text(reader.phone),
+                    Text(
+                      reader.card == null
+                          ? 'Карты нет'
+                          : 'Карта: ${reader.card!.number}',
+                    ),
+                    if (reader.isDeleted)
+                      const Padding(
+                        padding:
+                        EdgeInsets.only(top: 6),
+                        child: Text(
+                          'Удалён',
+                          style: TextStyle(
+                            fontWeight:
+                            FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ],
-
-                    const SizedBox(height: 8),
-
                     Wrap(
                       spacing: 4,
                       children: [
@@ -83,18 +84,22 @@ class AuthorCard extends StatelessWidget {
                         IconButton(
                           tooltip: 'Редактировать',
                           onPressed: onEdit,
-                          icon: const Icon(Icons.edit),
+                          icon: const Icon(
+                            Icons.edit,
+                          ),
                         ),
-                        if (author.isDeleted) ...[
+                        if (reader.isDeleted) ...[
                           IconButton(
-                            tooltip: 'Восстановить',
+                            tooltip:
+                            'Восстановить',
                             onPressed: onRestore,
                             icon: const Icon(
                               Icons.restore,
                             ),
                           ),
                           IconButton(
-                            tooltip: 'Удалить окончательно',
+                            tooltip:
+                            'Удалить окончательно',
                             onPressed: onHardDelete,
                             icon: const Icon(
                               Icons.delete_forever,

@@ -2,8 +2,10 @@ class BookQuery {
   final String search;
   final int? genreId;
   final int? publisherId;
+  final int? authorId;
   final int? yearFrom;
   final int? yearTo;
+  final bool? available;
   final String sortField;
   final bool sortAscending;
   final int page;
@@ -14,8 +16,10 @@ class BookQuery {
     this.search = '',
     this.genreId,
     this.publisherId,
+    this.authorId,
     this.yearFrom,
     this.yearTo,
+    this.available,
     this.sortField = 'title',
     this.sortAscending = true,
     this.page = 1,
@@ -27,8 +31,10 @@ class BookQuery {
     String? search,
     Object? genreId = _unset,
     Object? publisherId = _unset,
+    Object? authorId = _unset,
     Object? yearFrom = _unset,
     Object? yearTo = _unset,
+    Object? available = _unset,
     String? sortField,
     bool? sortAscending,
     int? page,
@@ -36,13 +42,15 @@ class BookQuery {
     bool? includeDeleted,
   }) {
     return BookQuery(
-        search: search ?? this.search,
-        genreId: genreId == _unset ? this.genreId : genreId as int?,
-        publisherId: publisherId == _unset
-            ? this.publisherId
-            : publisherId as int?,
-        yearFrom: yearFrom == _unset ? this.yearFrom : yearFrom as int?,
-        yearTo : yearTo == _unset ? this.yearTo : yearTo as int?,
+      search: search ?? this.search,
+      genreId: genreId == _unset ? this.genreId : genreId as int?,
+      publisherId: publisherId == _unset
+          ? this.publisherId
+          : publisherId as int?,
+      authorId: authorId == _unset ? this.authorId : authorId as int?,
+      yearFrom: yearFrom == _unset ? this.yearFrom : yearFrom as int?,
+      yearTo: yearTo == _unset ? this.yearTo : yearTo as int?,
+      available: available == _unset ? this.available : available as bool?,
       sortField: sortField ?? this.sortField,
       sortAscending: sortAscending ?? this.sortAscending,
       page: page ?? 1,

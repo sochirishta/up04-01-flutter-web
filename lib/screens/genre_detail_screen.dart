@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../models/author.dart';
-import '../repositories/author_repository.dart';
-import '../state/author_list_notifier.dart';
+import '../models/genre.dart';
+import '../repositories/genre_repository.dart';
+import '../state/genre_list_notifier.dart';
 
-class AuthorDetailScreen extends StatelessWidget {
+class GenreDetailScreen extends StatelessWidget {
   final int id;
 
-  const AuthorDetailScreen({
+  const GenreDetailScreen({
     super.key,
     required this.id,
   });
@@ -18,10 +18,10 @@ class AuthorDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Автор'),
+        title: const Text('Жанр'),
       ),
-      body: FutureBuilder<Author?>(
-        future: context.read<AuthorRepository>().findById(id),
+      body: FutureBuilder<Genre?>(
+        future: context.read<GenreRepository>().findById(id),
         builder: (context, snapshot) {
           if (snapshot.connectionState ==
               ConnectionState.waiting) {
@@ -38,36 +38,36 @@ class AuthorDetailScreen extends StatelessWidget {
             );
           }
 
-          final author = snapshot.data;
+          final genre = snapshot.data;
 
-          if (author == null) {
+          if (genre == null) {
             return const Center(
-              child: Text('Автор не найден'),
+              child: Text('Жанр не найден'),
             );
           }
 
-          return _AuthorCard(author: author);
+          return _GenreCard(genre: genre);
         },
       ),
     );
   }
 }
 
-class _AuthorCard extends StatelessWidget {
-  final Author author;
+class _GenreCard extends StatelessWidget {
+  final Genre genre;
 
-  const _AuthorCard({
-    required this.author,
+  const _GenreCard({
+    required this.genre,
   });
 
-  Future<void> _deleteAuthor(BuildContext context) async {
+  Future<void> _deleteGenre(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Удалить автора?'),
+        title: const Text('Удалить жанр?'),
         content: Text(
-          'Вы действительно хотите удалить автора '
-              '«${author.fullName}»?',
+          'Вы действительно хотите удалить жанр '
+              '«${genre.name}»?',
         ),
         actions: [
           TextButton(
@@ -90,33 +90,29 @@ class _AuthorCard extends StatelessWidget {
       return;
     }
 
-    await context
-        .read<AuthorListNotifier>()
-        .deleteAuthor(author.id);
+    await context.read<GenreListNotifier>().deleteGenre(genre.id);
 
     if (!context.mounted) return;
 
-    context.go('/authors');
+    context.go('/genres');
   }
 
-  Future<void> _restoreAuthor(BuildContext context) async {
-    await context
-        .read<AuthorListNotifier>()
-        .restoreItem(author.id);
+  Future<void> _restoreGenre(BuildContext context) async {
+    await context.read<GenreListNotifier>().restoreItem(genre.id);
 
     if (!context.mounted) return;
 
-    context.go('/authors');
+    context.go('/genres');
   }
 
-  Future<void> _hardDeleteAuthor(BuildContext context) async {
+  Future<void> _hardDeleteGenre(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Удалить автора окончательно?'),
+        title: const Text('Удалить жанр окончательно?'),
         content: Text(
-          'Автор «${author.fullName}» будет удалён без '
-              'возможности восстановления.',
+          'Жанр «${genre.name}» будет удалён без возможности '
+              'восстановления.',
         ),
         actions: [
           TextButton(
@@ -140,12 +136,12 @@ class _AuthorCard extends StatelessWidget {
     }
 
     await context
-        .read<AuthorListNotifier>()
-        .hardDeleteItem(author.id);
+        .read<GenreListNotifier>()
+        .hardDeleteItem(genre.id);
 
     if (!context.mounted) return;
 
-    context.go('/authors');
+    context.go('/genres');
   }
 
   @override
@@ -163,7 +159,7 @@ class _AuthorCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      author.fullName,
+                      genre.name,
                       style: Theme.of(context)
                           .textTheme
                           .headlineMedium,
@@ -176,32 +172,32 @@ class _AuthorCard extends StatelessWidget {
                         tooltip: 'Редактировать',
                         onPressed: () {
                           context.go(
-                            '/authors/${author.id}/edit',
+                            '/genres/${genre.id}/edit',
                           );
                         },
                         icon: const Icon(Icons.edit),
                       ),
-                      if (!author.isDeleted)
+                      if (!genre.isDeleted)
                         IconButton(
                           tooltip: 'Удалить',
                           onPressed: () {
-                            _deleteAuthor(context);
+                            _deleteGenre(context);
                           },
                           icon: const Icon(Icons.delete),
                         ),
-                      if (author.isDeleted)
+                      if (genre.isDeleted)
                         IconButton(
                           tooltip: 'Восстановить',
                           onPressed: () {
-                            _restoreAuthor(context);
+                            _restoreGenre(context);
                           },
                           icon: const Icon(Icons.restore),
                         ),
-                      if (author.isDeleted)
+                      if (genre.isDeleted)
                         IconButton(
                           tooltip: 'Удалить окончательно',
                           onPressed: () {
-                            _hardDeleteAuthor(context);
+                            _hardDeleteGenre(context);
                           },
                           icon: const Icon(
                             Icons.delete_forever,
@@ -215,23 +211,19 @@ class _AuthorCard extends StatelessWidget {
               const SizedBox(height: 24),
 
               _InfoRow(
-                label: 'ФИО',
-                value: author.fullName,
+                label: 'Название',
+                value: genre.name,
               ),
               _InfoRow(
-                label: 'Год рождения',
-                value: author.birthYear.toString(),
-              ),
-              _InfoRow(
-                label: 'Страна',
-                value: author.country,
+                label: 'Описание',
+                value: genre.description,
               ),
 
-              if (author.isDeleted)
+              if (genre.isDeleted)
                 const Padding(
                   padding: EdgeInsets.only(top: 16),
                   child: Text(
-                    'Автор удалён',
+                    'Жанр удалён',
                     style: TextStyle(
                       color: Colors.red,
                       fontWeight: FontWeight.bold,

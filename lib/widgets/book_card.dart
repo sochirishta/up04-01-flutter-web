@@ -7,6 +7,7 @@ class BookCard extends StatelessWidget {
   final bool selected;
   final VoidCallback onSelectionChanged;
   final VoidCallback onOpen;
+  final VoidCallback onEdit;
   final VoidCallback? onRestore;
   final VoidCallback? onHardDelete;
 
@@ -16,6 +17,7 @@ class BookCard extends StatelessWidget {
     required this.selected,
     required this.onSelectionChanged,
     required this.onOpen,
+    required this.onEdit,
     this.onRestore,
     this.onHardDelete,
   });
@@ -82,6 +84,18 @@ class BookCard extends StatelessWidget {
                           onPressed: onOpen,
                           icon: const Icon(
                             Icons.open_in_new,
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Редактировать',
+                          onPressed: onEdit,
+                          icon: const Icon(Icons.edit),
+                        ),
+                        IconButton(
+                          tooltip: 'Редактировать',
+                          onPressed: onEdit,
+                          icon: const Icon(
+                            Icons.edit,
                           ),
                         ),
 

@@ -1,4 +1,4 @@
-class AuthorQuery {
+class GenreQuery {
   final String search;
   final String sortField;
   final bool sortAscending;
@@ -6,16 +6,16 @@ class AuthorQuery {
   final int size;
   final bool includeDeleted;
 
-  const AuthorQuery({
+  const GenreQuery({
     this.search = '',
-    this.sortField = 'fullName',
+    this.sortField = 'name',
     this.sortAscending = true,
     this.page = 1,
     this.size = 10,
     this.includeDeleted = false,
   });
 
-  AuthorQuery copyWith({
+  GenreQuery copyWith({
     String? search,
     String? sortField,
     bool? sortAscending,
@@ -23,7 +23,7 @@ class AuthorQuery {
     int? size,
     bool? includeDeleted,
   }) {
-    return AuthorQuery(
+    return GenreQuery(
       search: search ?? this.search,
       sortField: sortField ?? this.sortField,
       sortAscending: sortAscending ?? this.sortAscending,

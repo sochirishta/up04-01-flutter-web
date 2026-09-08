@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../models/author.dart';
+import '../models/genre.dart';
 
-class AuthorCard extends StatelessWidget {
-  final Author author;
+class GenreCard extends StatelessWidget {
+  final Genre genre;
   final bool selected;
   final VoidCallback onSelectionChanged;
   final VoidCallback onOpen;
@@ -11,9 +11,9 @@ class AuthorCard extends StatelessWidget {
   final VoidCallback? onRestore;
   final VoidCallback? onHardDelete;
 
-  const AuthorCard({
+  const GenreCard({
     super.key,
-    required this.author,
+    required this.genre,
     required this.selected,
     required this.onSelectionChanged,
     required this.onOpen,
@@ -46,16 +46,17 @@ class AuthorCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      author.fullName,
+                      genre.name,
                       style: Theme.of(context)
                           .textTheme
                           .titleMedium,
                     ),
                     const SizedBox(height: 6),
-                    Text('Год рождения: ${author.birthYear}'),
-                    Text('Страна: ${author.country}'),
+                    Text(
+                      'Описание: ${genre.description}',
+                    ),
 
-                    if (author.isDeleted) ...[
+                    if (genre.isDeleted) ...[
                       const SizedBox(height: 6),
                       Text(
                         'Удалён',
@@ -85,7 +86,7 @@ class AuthorCard extends StatelessWidget {
                           onPressed: onEdit,
                           icon: const Icon(Icons.edit),
                         ),
-                        if (author.isDeleted) ...[
+                        if (genre.isDeleted) ...[
                           IconButton(
                             tooltip: 'Восстановить',
                             onPressed: onRestore,

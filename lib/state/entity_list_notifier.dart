@@ -15,17 +15,17 @@ enum LoadStatus {
 
 abstract class EntityListNotifier<T, Q> extends ChangeNotifier {
   EntityListNotifier({
-    required this._find,
-    required this._deleteMany,
-    required this._restore,
-    required this._hardDelete,
+    required this.find,
+    required this.deleteMany,
+    required this.restore,
+    required this.hardDelete,
     required Q initialQuery,
   })  : _query = initialQuery;
 
-  final FindFunction<T, Q> _find;
-  final DeleteManyFunction _deleteMany;
-  final IdFunction _restore;
-  final IdFunction _hardDelete;
+  final FindFunction<T, Q> find;
+  final DeleteManyFunction deleteMany;
+  final IdFunction restore;
+  final IdFunction hardDelete;
 
   Q _query;
   PageResult<T> _result = PageResult.empty();
@@ -50,7 +50,7 @@ abstract class EntityListNotifier<T, Q> extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _result = await _find(_query);
+      _result = await find(_query);
       _status = LoadStatus.success;
     } catch (error) {
       _status = LoadStatus.error;
@@ -78,18 +78,18 @@ abstract class EntityListNotifier<T, Q> extends ChangeNotifier {
   Future<void> deleteSelected() async {
     if (_selected.isEmpty) return;
 
-    await _deleteMany(_selected.toList());
+    await deleteMany(_selected.toList());
     _selected.clear();
     await load();
   }
 
-  Future<void> restore(int id) async {
-    await _restore(id);
+  Future<void> restoreItem(int id) async {
+    await restore(id);
     await load();
   }
 
-  Future<void> hardDelete(int id) async {
-    await _hardDelete(id);
+  Future<void> hardDeleteItem(int id) async {
+    await hardDelete(id);
     await load();
   }
 }

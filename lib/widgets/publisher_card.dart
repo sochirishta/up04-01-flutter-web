@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../models/author.dart';
+import '../models/publisher.dart';
 
-class AuthorCard extends StatelessWidget {
-  final Author author;
+class PublisherCard extends StatelessWidget {
+  final Publisher publisher;
   final bool selected;
   final VoidCallback onSelectionChanged;
   final VoidCallback onOpen;
@@ -11,9 +11,9 @@ class AuthorCard extends StatelessWidget {
   final VoidCallback? onRestore;
   final VoidCallback? onHardDelete;
 
-  const AuthorCard({
+  const PublisherCard({
     super.key,
-    required this.author,
+    required this.publisher,
     required this.selected,
     required this.onSelectionChanged,
     required this.onOpen,
@@ -32,7 +32,8 @@ class AuthorCard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+            CrossAxisAlignment.start,
             children: [
               Checkbox(
                 value: selected,
@@ -43,19 +44,24 @@ class AuthorCard extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment:
+                  CrossAxisAlignment.start,
                   children: [
                     Text(
-                      author.fullName,
+                      publisher.name,
                       style: Theme.of(context)
                           .textTheme
                           .titleMedium,
                     ),
                     const SizedBox(height: 6),
-                    Text('Год рождения: ${author.birthYear}'),
-                    Text('Страна: ${author.country}'),
-
-                    if (author.isDeleted) ...[
+                    Text(
+                      'Город: ${publisher.city}',
+                    ),
+                    Text(
+                      'Год основания: '
+                          '${publisher.foundedYear}',
+                    ),
+                    if (publisher.isDeleted) ...[
                       const SizedBox(height: 6),
                       Text(
                         'Удалён',
@@ -67,9 +73,7 @@ class AuthorCard extends StatelessWidget {
                         ),
                       ),
                     ],
-
                     const SizedBox(height: 8),
-
                     Wrap(
                       spacing: 4,
                       children: [
@@ -85,7 +89,7 @@ class AuthorCard extends StatelessWidget {
                           onPressed: onEdit,
                           icon: const Icon(Icons.edit),
                         ),
-                        if (author.isDeleted) ...[
+                        if (publisher.isDeleted) ...[
                           IconButton(
                             tooltip: 'Восстановить',
                             onPressed: onRestore,
@@ -94,7 +98,8 @@ class AuthorCard extends StatelessWidget {
                             ),
                           ),
                           IconButton(
-                            tooltip: 'Удалить окончательно',
+                            tooltip:
+                            'Удалить окончательно',
                             onPressed: onHardDelete,
                             icon: const Icon(
                               Icons.delete_forever,

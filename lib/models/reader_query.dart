@@ -1,4 +1,4 @@
-class AuthorQuery {
+class ReaderQuery {
   final String search;
   final String sortField;
   final bool sortAscending;
@@ -6,7 +6,7 @@ class AuthorQuery {
   final int size;
   final bool includeDeleted;
 
-  const AuthorQuery({
+  const ReaderQuery({
     this.search = '',
     this.sortField = 'fullName',
     this.sortAscending = true,
@@ -15,7 +15,7 @@ class AuthorQuery {
     this.includeDeleted = false,
   });
 
-  AuthorQuery copyWith({
+  ReaderQuery copyWith({
     String? search,
     String? sortField,
     bool? sortAscending,
@@ -23,11 +23,11 @@ class AuthorQuery {
     int? size,
     bool? includeDeleted,
   }) {
-    return AuthorQuery(
+    return ReaderQuery(
       search: search ?? this.search,
       sortField: sortField ?? this.sortField,
       sortAscending: sortAscending ?? this.sortAscending,
-      page: page ?? 1,
+      page: page ?? this.page,
       size: size ?? this.size,
       includeDeleted: includeDeleted ?? this.includeDeleted,
     );

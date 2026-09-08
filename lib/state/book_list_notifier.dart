@@ -89,6 +89,15 @@ class BookListNotifier
     );
   }
 
+  Future<void> setAuthor(int? id) {
+    return applyQuery(
+      query.copyWith(
+        authorId: id,
+        page: 1,
+      ),
+    );
+  }
+
   Future<void> setYearFrom(int? year) {
     return applyQuery(
       query.copyWith(
@@ -104,6 +113,15 @@ class BookListNotifier
         yearTo: year,
         page: 1,
       ),
+    );
+  }
+
+  Future<void> setAvailable(bool? value) {
+    return applyQuery(
+      query.copyWith(
+        available: value,
+        page: 1,
+      )
     );
   }
 
@@ -174,6 +192,27 @@ class BookListNotifier
     return _repository.findById(id);
   }
 
+  Future<bool> isIsbnFree(
+      String isbn, {
+        int? exceptId,
+      }) async {
+    final result = await _repository.find(
+      const BookQuery(
+        page: 1,
+        size: 1000,
+        includeDeleted: true,
+      ),
+    );
+
+    final normalized = isbn.trim().toLowerCase();
+
+    return !result.items.any(
+          (book) =>
+      book.isbn.trim().toLowerCase() == normalized &&
+          book.id != exceptId,
+    );
+  }
+
   String urlFor(BookQuery value) {
     final params = <String, String>{
       if (value.search.isNotEmpty)
@@ -182,10 +221,14 @@ class BookListNotifier
         'genreId': '${value.genreId}',
       if (value.publisherId != null)
         'publisherId': '${value.publisherId}',
+      if (value.authorId != null)
+        'autorId': '${value.authorId}',
       if (value.yearFrom != null)
         'yearFrom': '${value.yearFrom}',
       if (value.yearTo != null)
         'yearTo': '${value.yearTo}',
+      if (value.available != null)
+        'available': '${value.available}',
       'sort':
       '${value.sortField},${value.sortAscending ? 'asc' : 'desc'}',
       'page': '${value.page}',

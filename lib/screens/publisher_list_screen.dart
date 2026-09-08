@@ -2,66 +2,70 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../models/author.dart';
-import '../models/author_query.dart';
-import '../state/author_list_notifier.dart';
+import '../models/publisher.dart';
+import '../models/publisher_query.dart';
 import '../state/entity_list_notifier.dart';
-import '../widgets/author_card.dart';
+import '../state/publisher_list_notifier.dart';
 import '../widgets/entity_table.dart';
 import '../widgets/pagination_controls.dart';
+import '../widgets/publisher_card.dart';
 import '../widgets/app_navigation_drawer.dart';
 
-class AuthorListScreen extends StatefulWidget {
-  final AuthorQuery initialQuery;
+class PublisherListScreen extends StatefulWidget {
+  final PublisherQuery initialQuery;
 
-  const AuthorListScreen({
+  const PublisherListScreen({
     super.key,
     required this.initialQuery,
   });
 
   @override
-  State<AuthorListScreen> createState() => _AuthorListScreenState();
+  State<PublisherListScreen> createState() =>
+      _PublisherListScreenState();
 }
 
-class _AuthorListScreenState extends State<AuthorListScreen> {
+class _PublisherListScreenState
+    extends State<PublisherListScreen> {
   final _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
 
-    final notifier = context.read<AuthorListNotifier>();
+    final notifier = context.read<PublisherListNotifier>();
 
     notifier.addListener(_updateUrl);
 
     notifier.setQuery(widget.initialQuery);
+
     _searchController.text = widget.initialQuery.search;
   }
 
   void _updateUrl() {
     if (!mounted) return;
 
-    final notifier = context.read<AuthorListNotifier>();
+    final notifier = context.read<PublisherListNotifier>();
 
     final newLocation = notifier.urlFor(notifier.query);
 
-    if (GoRouterState.of(context).uri.toString() != newLocation) {
+    if (GoRouterState.of(context).uri.toString() !=
+        newLocation) {
       context.go(newLocation);
     }
   }
 
   Future<void> _deleteSelected() async {
-    final notifier = context.read<AuthorListNotifier>();
+    final notifier = context.read<PublisherListNotifier>();
 
     if (!notifier.hasSelection) return;
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Удалить авторов?'),
+        title: const Text('Удалить издателей?'),
         content: Text(
           'Вы действительно хотите удалить '
-              '${notifier.selected.length} выбранных авторов?',
+              '${notifier.selected.length} выбранных издателей?',
         ),
         actions: [
           TextButton(
@@ -88,7 +92,7 @@ class _AuthorListScreenState extends State<AuthorListScreen> {
   @override
   void dispose() {
     context
-        .read<AuthorListNotifier>()
+        .read<PublisherListNotifier>()
         .removeListener(_updateUrl);
 
     _searchController.dispose();
@@ -98,7 +102,7 @@ class _AuthorListScreenState extends State<AuthorListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final notifier = context.watch<AuthorListNotifier>();
+    final notifier = context.watch<PublisherListNotifier>();
 
     final result = notifier.result;
     final query = notifier.query;
@@ -122,22 +126,24 @@ class _AuthorListScreenState extends State<AuthorListScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            tooltip: 'Добавить автора',
+            tooltip: 'Добавить издателя',
             onPressed: () {
-              context.go('/authors/new');
+              context.go('/publishers/new');
             },
           ),
         ],
       ),
       drawer: const AppNavigationDrawer(
-        currentRoute: '/authors',
+        currentRoute: '/publishers',
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Text(
-            'Авторы',
-            style: Theme.of(context).textTheme.headlineMedium,
+            'Издатели',
+            style: Theme.of(context)
+                .textTheme
+                .headlineMedium,
           ),
 
           const SizedBox(height: 16),
@@ -196,7 +202,9 @@ class _AuthorListScreenState extends State<AuthorListScreen> {
 
           if (result.items.isEmpty)
             const Center(
-              child: Text('Авторы не найдены'),
+              child: Text(
+                'Издатели не найдены',
+              ),
             )
           else
             LayoutBuilder(
@@ -205,34 +213,34 @@ class _AuthorListScreenState extends State<AuthorListScreen> {
                   return Column(
                     children: result.items
                         .map(
-                          (author) => AuthorCard(
-                        author: author,
+                          (publisher) => PublisherCard(
+                        publisher: publisher,
                         selected: notifier.selected.contains(
-                          author.id,
+                          publisher.id,
                         ),
                         onSelectionChanged: () {
                           notifier.toggleSelection(
-                            author.id,
+                            publisher.id,
                           );
                         },
                         onOpen: () {
                           context.go(
-                            '/authors/${author.id}',
+                            '/publishers/${publisher.id}',
                           );
                         },
                         onEdit: () {
                           context.go(
-                            '/authors/${author.id}/edit',
+                            '/publishers/${publisher.id}/edit',
                           );
                         },
-                        onRestore: author.isDeleted
+                        onRestore: publisher.isDeleted
                             ? () => notifier.restoreItem(
-                          author.id,
+                          publisher.id,
                         )
                             : null,
-                        onHardDelete: author.isDeleted
+                        onHardDelete: publisher.isDeleted
                             ? () => notifier.hardDeleteItem(
-                          author.id,
+                          publisher.id,
                         )
                             : null,
                       ),
@@ -241,43 +249,42 @@ class _AuthorListScreenState extends State<AuthorListScreen> {
                   );
                 }
 
-                return EntityTable<Author>(
+                return EntityTable<Publisher>(
                   items: result.items,
                   selected: notifier.selected,
-                  idOf: (author) => author.id,
+                  idOf: (publisher) => publisher.id,
                   onToggleSelect: notifier.toggleSelection,
                   sortField: query.sortField,
                   sortAscending: query.sortAscending,
                   onSort: notifier.sort,
                   columns: [
-                    TableColumnSpec<Author>(
-                      label: 'ФИО',
-                      sortField: 'fullName',
-                      build: (author) => Text(
-                        author.fullName,
-                      ),
+                    TableColumnSpec<Publisher>(
+                      label: 'Название',
+                      sortField: 'name',
+                      build: (publisher) =>
+                          Text(publisher.name),
                     ),
-                    TableColumnSpec<Author>(
-                      label: 'Год рождения',
-                      sortField: 'birthYear',
-                      build: (author) => Text(
-                        author.birthYear.toString(),
-                      ),
+                    TableColumnSpec<Publisher>(
+                      label: 'Город',
+                      sortField: 'city',
+                      build: (publisher) =>
+                          Text(publisher.city),
                     ),
-                    TableColumnSpec<Author>(
-                      label: 'Страна',
-                      sortField: 'country',
-                      build: (author) => Text(
-                        author.country,
-                      ),
+                    TableColumnSpec<Publisher>(
+                      label: 'Год основания',
+                      sortField: 'foundedYear',
+                      build: (publisher) =>
+                          Text(
+                            publisher.foundedYear.toString(),
+                          ),
                     ),
                   ],
-                  actions: (author) => [
+                  actions: (publisher) => [
                     IconButton(
                       tooltip: 'Открыть',
                       onPressed: () {
                         context.go(
-                          '/authors/${author.id}',
+                          '/publishers/${publisher.id}',
                         );
                       },
                       icon: const Icon(
@@ -288,27 +295,27 @@ class _AuthorListScreenState extends State<AuthorListScreen> {
                       tooltip: 'Редактировать',
                       onPressed: () {
                         context.go(
-                          '/authors/${author.id}/edit',
+                          '/publishers/${publisher.id}/edit',
                         );
                       },
                       icon: const Icon(Icons.edit),
                     ),
-                    if (author.isDeleted)
+                    if (publisher.isDeleted)
                       IconButton(
                         tooltip: 'Восстановить',
                         onPressed: () {
                           notifier.restoreItem(
-                            author.id,
+                            publisher.id,
                           );
                         },
                         icon: const Icon(Icons.restore),
                       ),
-                    if (author.isDeleted)
+                    if (publisher.isDeleted)
                       IconButton(
                         tooltip: 'Удалить окончательно',
                         onPressed: () {
                           notifier.hardDeleteItem(
-                            author.id,
+                            publisher.id,
                           );
                         },
                         icon: const Icon(
