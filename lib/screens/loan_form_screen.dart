@@ -10,24 +10,20 @@ import '../repositories/loan_repository.dart';
 import '../repositories/reader_repository.dart';
 import '../models/book_query.dart';
 import '../models/reader_query.dart';
+import '../core/api_exceptions.dart';
 
 class LoanFormScreen extends StatefulWidget {
   final int? id;
 
-  const LoanFormScreen({
-    super.key,
-    this.id,
-  });
+  const LoanFormScreen({super.key, this.id});
 
   bool get isEditing => id != null;
 
   @override
-  State<LoanFormScreen> createState() =>
-      _LoanFormScreenState();
+  State<LoanFormScreen> createState() => _LoanFormScreenState();
 }
 
-class _LoanFormScreenState
-    extends State<LoanFormScreen> {
+class _LoanFormScreenState extends State<LoanFormScreen> {
   final _formKey = GlobalKey<FormState>();
 
   List<Reader> _readers = [];
@@ -38,8 +34,7 @@ class _LoanFormScreenState
 
   DateTime _issuedAt = DateTime.now();
 
-  DateTime _dueAt =
-  DateTime.now().add(const Duration(days: 14));
+  DateTime _dueAt = DateTime.now().add(const Duration(days: 14));
 
   bool _loading = true;
   bool _saving = false;
@@ -51,31 +46,22 @@ class _LoanFormScreenState
   }
 
   Future<void> _load() async {
-    final readerRepository =
-    context.read<ReaderRepository>();
+    final readerRepository = context.read<ReaderRepository>();
 
-    final bookRepository =
-    context.read<BookRepository>();
+    final bookRepository = context.read<BookRepository>();
 
-    final loanRepository =
-    context.read<LoanRepository>();
+    final loanRepository = context.read<LoanRepository>();
 
-    final readerResult =
-    await readerRepository.find(
+    final readerResult = await readerRepository.find(
       const ReaderQuery(size: 1000),
     );
 
-    final bookResult =
-    await bookRepository.find(
-      const BookQuery(size: 1000),
-    );
+    final bookResult = await bookRepository.find(const BookQuery(size: 1000));
 
     Loan? loan;
 
     if (widget.isEditing) {
-      loan = await loanRepository.findById(
-        widget.id!,
-      );
+      loan = await loanRepository.findById(widget.id!);
     }
 
     if (!mounted) return;
@@ -104,13 +90,11 @@ class _LoanFormScreenState
 
     setState(() => _saving = true);
 
-    final repository =
-    context.read<LoanRepository>();
+    final repository = context.read<LoanRepository>();
 
     try {
       if (widget.isEditing) {
-        final old =
-        await repository.findById(widget.id!);
+        final old = await repository.findById(widget.id!);
 
         if (old == null) {
           throw StateError('Выдача не найдена');
@@ -140,14 +124,14 @@ class _LoanFormScreenState
       if (!mounted) return;
 
       context.go('/loans');
+    } on ConflictException catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (e) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString()),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       if (mounted) {
         setState(() => _saving = false);
@@ -159,21 +143,15 @@ class _LoanFormScreenState
   Widget build(BuildContext context) {
     if (_loading) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Выдача'),
-        ),
-        body: const Center(
-          child: CircularProgressIndicator(),
-        ),
+        appBar: AppBar(title: const Text('Выдача')),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.isEditing
-              ? 'Редактирование выдачи'
-              : 'Новая выдача',
+          widget.isEditing ? 'Редактирование выдачи' : 'Новая выдача',
         ),
       ),
       body: Form(
@@ -190,24 +168,17 @@ class _LoanFormScreenState
               items: _readers
                   .map(
                     (reader) => DropdownMenuItem(
-                  value: reader.id,
-                  child: Text(
-                    '${reader.fullName} — ${reader.email}',
-                  ),
-                ),
-              )
+                      value: reader.id,
+                      child: Text('${reader.fullName} — ${reader.email}'),
+                    ),
+                  )
                   .toList(),
               onChanged: _saving
                   ? null
                   : (value) {
-                setState(
-                      () => _readerId = value,
-                );
-              },
-              validator: (value) =>
-              value == null
-                  ? 'Выберите читателя'
-                  : null,
+                      setState(() => _readerId = value);
+                    },
+              validator: (value) => value == null ? 'Выберите читателя' : null,
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<int>(
@@ -219,66 +190,39 @@ class _LoanFormScreenState
               items: _books
                   .map(
                     (book) => DropdownMenuItem(
-                  value: book.id,
-                  child: Text(
-                    '${book.title} (${book.copiesAvailable})',
-                  ),
-                ),
-              )
+                      value: book.id,
+                      child: Text('${book.title} (${book.copiesAvailable})'),
+                    ),
+                  )
                   .toList(),
               onChanged: _saving
                   ? null
                   : (value) {
-                setState(
-                      () => _bookId = value,
-                );
-              },
-              validator: (value) =>
-              value == null
-                  ? 'Выберите книгу'
-                  : null,
+                      setState(() => _bookId = value);
+                    },
+              validator: (value) => value == null ? 'Выберите книгу' : null,
             ),
             const SizedBox(height: 20),
             ListTile(
               title: const Text('Дата выдачи'),
-              subtitle: Text(
-                _issuedAt
-                    .toLocal()
-                    .toString()
-                    .split(' ')
-                    .first,
-              ),
+              subtitle: Text(_issuedAt.toLocal().toString().split(' ').first),
             ),
             ListTile(
               title: const Text('Вернуть до'),
-              subtitle: Text(
-                _dueAt
-                    .toLocal()
-                    .toString()
-                    .split(' ')
-                    .first,
-              ),
+              subtitle: Text(_dueAt.toLocal().toString().split(' ').first),
             ),
             const SizedBox(height: 24),
             Row(
-              mainAxisAlignment:
-              MainAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 OutlinedButton(
-                  onPressed: _saving
-                      ? null
-                      : () => context.go('/loans'),
+                  onPressed: _saving ? null : () => context.go('/loans'),
                   child: const Text('Отмена'),
                 ),
                 const SizedBox(width: 12),
                 FilledButton(
-                  onPressed:
-                  _saving ? null : _submit,
-                  child: Text(
-                    widget.isEditing
-                        ? 'Сохранить'
-                        : 'Создать',
-                  ),
+                  onPressed: _saving ? null : _submit,
+                  child: Text(widget.isEditing ? 'Сохранить' : 'Создать'),
                 ),
               ],
             ),

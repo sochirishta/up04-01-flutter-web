@@ -11,28 +11,21 @@ import '../widgets/form_field_definition.dart';
 class AuthorFormScreen extends StatefulWidget {
   final int? id;
 
-  const AuthorFormScreen({
-    super.key,
-    this.id,
-  });
+  const AuthorFormScreen({super.key, this.id});
 
   bool get isEditing => id != null;
 
   @override
-  State<AuthorFormScreen> createState() =>
-      _AuthorFormScreenState();
+  State<AuthorFormScreen> createState() => _AuthorFormScreenState();
 }
 
-class _AuthorFormScreenState
-    extends State<AuthorFormScreen> {
+class _AuthorFormScreenState extends State<AuthorFormScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _hasUnsavedChanges = false;
 
-  final _fullNameController =
-  TextEditingController();
+  final _fullNameController = TextEditingController();
 
-  final _birthYearController =
-  TextEditingController();
+  final _birthYearController = TextEditingController();
 
   void _markChanged() {
     if (!_hasUnsavedChanges) {
@@ -42,8 +35,7 @@ class _AuthorFormScreenState
     }
   }
 
-  final _countryController =
-  TextEditingController();
+  final _countryController = TextEditingController();
 
   bool _isLoading = false;
   bool _isSaving = false;
@@ -70,11 +62,9 @@ class _AuthorFormScreenState
       _isLoading = true;
     });
 
-    final repository =
-    context.read<AuthorRepository>();
+    final repository = context.read<AuthorRepository>();
 
-    final author =
-    await repository.findById(widget.id!);
+    final author = await repository.findById(widget.id!);
 
     if (!mounted) return;
 
@@ -83,14 +73,11 @@ class _AuthorFormScreenState
       return;
     }
 
-    _fullNameController.text =
-        author.fullName;
+    _fullNameController.text = author.fullName;
 
-    _birthYearController.text =
-        author.birthYear.toString();
+    _birthYearController.text = author.birthYear.toString();
 
-    _countryController.text =
-        author.country;
+    _countryController.text = author.country;
 
     setState(() {
       _isLoading = false;
@@ -106,22 +93,17 @@ class _AuthorFormScreenState
       _isSaving = true;
     });
 
-    final repository =
-    context.read<AuthorRepository>();
+    final repository = context.read<AuthorRepository>();
 
-    final fullName =
-    _fullNameController.text.trim();
+    final fullName = _fullNameController.text.trim();
 
-    final birthYear =
-    int.parse(_birthYearController.text.trim());
+    final birthYear = int.parse(_birthYearController.text.trim());
 
-    final country =
-    _countryController.text.trim();
+    final country = _countryController.text.trim();
 
     try {
       if (widget.isEditing) {
-        final oldAuthor =
-        await repository.findById(widget.id!);
+        final oldAuthor = await repository.findById(widget.id!);
 
         if (oldAuthor == null) {
           throw StateError('Автор не найден');
@@ -151,11 +133,7 @@ class _AuthorFormScreenState
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$e'),
-        ),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
     } finally {
       if (mounted) {
         setState(() {
@@ -169,9 +147,7 @@ class _AuthorFormScreenState
   Widget build(BuildContext context) {
     return EntityForm(
       formKey: _formKey,
-      title: widget.isEditing
-          ? 'Редактирование автора'
-          : 'Новый автор',
+      title: widget.isEditing ? 'Редактирование автора' : 'Новый автор',
       isEditing: widget.isEditing,
       isLoading: _isLoading,
       isSaving: _isSaving,
@@ -183,8 +159,7 @@ class _AuthorFormScreenState
           label: 'ФИО',
           type: FormFieldType.text,
           controller: _fullNameController,
-          validator: (value) =>
-              Validators.maxLength(value, 100),
+          validator: (value) => Validators.maxLength(value, 100),
           onChanged: (_) => _markChanged(),
         ),
 
@@ -192,11 +167,8 @@ class _AuthorFormScreenState
           label: 'Год рождения',
           type: FormFieldType.number,
           controller: _birthYearController,
-          validator: (value) => Validators.integer(
-            value,
-            min: 0,
-            max: DateTime.now().year,
-          ),
+          validator: (value) =>
+              Validators.integer(value, min: 0, max: DateTime.now().year),
           onChanged: (_) => _markChanged(),
         ),
 
@@ -204,8 +176,7 @@ class _AuthorFormScreenState
           label: 'Страна',
           type: FormFieldType.text,
           controller: _countryController,
-          validator: (value) =>
-              Validators.maxLength(value, 100),
+          validator: (value) => Validators.maxLength(value, 100),
           onChanged: (_) => _markChanged(),
         ),
       ],

@@ -1,9 +1,13 @@
 import '../models/page_result.dart';
 import '../models/publisher.dart';
 import '../models/publisher_query.dart';
+import 'package:dio/dio.dart';
 
 abstract class PublisherRepository {
-  Future<PageResult<Publisher>> find(PublisherQuery query);
+  Future<PageResult<Publisher>> find(
+    PublisherQuery query, {
+    CancelToken? cancelToken,
+  });
 
   Future<Publisher?> findById(int id);
 

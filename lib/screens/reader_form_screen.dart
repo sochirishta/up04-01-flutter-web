@@ -12,16 +12,12 @@ import '../widgets/form_field_definition.dart';
 class ReaderFormScreen extends StatefulWidget {
   final int? id;
 
-  const ReaderFormScreen({
-    super.key,
-    this.id,
-  });
+  const ReaderFormScreen({super.key, this.id});
 
   bool get isEditing => id != null;
 
   @override
-  State<ReaderFormScreen> createState() =>
-      _ReaderFormScreenState();
+  State<ReaderFormScreen> createState() => _ReaderFormScreenState();
 }
 
 class _ReaderFormScreenState extends State<ReaderFormScreen> {
@@ -41,8 +37,7 @@ class _ReaderFormScreenState extends State<ReaderFormScreen> {
 
   DateTime _issuedAt = DateTime.now();
 
-  DateTime _expiresAt =
-  DateTime.now().add(const Duration(days: 365));
+  DateTime _expiresAt = DateTime.now().add(const Duration(days: 365));
 
   void _markChanged() {
     if (!_hasUnsavedChanges) {
@@ -114,9 +109,7 @@ class _ReaderFormScreenState extends State<ReaderFormScreen> {
 
     final email = value!.trim();
 
-    if (!RegExp(
-      r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
-    ).hasMatch(email)) {
+    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
       return 'Введите корректный email';
     }
 
@@ -194,17 +187,14 @@ class _ReaderFormScreenState extends State<ReaderFormScreen> {
 
       if (message.contains('email уже существует')) {
         setState(() {
-          _emailError =
-          'Читатель с таким email уже существует';
+          _emailError = 'Читатель с таким email уже существует';
         });
 
         _formKey.currentState!.validate();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
       }
     } finally {
       if (mounted) {
@@ -242,9 +232,7 @@ class _ReaderFormScreenState extends State<ReaderFormScreen> {
   Widget build(BuildContext context) {
     return EntityForm(
       formKey: _formKey,
-      title: widget.isEditing
-          ? 'Редактирование читателя'
-          : 'Новый читатель',
+      title: widget.isEditing ? 'Редактирование читателя' : 'Новый читатель',
       isEditing: widget.isEditing,
       isLoading: _isLoading,
       isSaving: _isSaving,
@@ -256,8 +244,7 @@ class _ReaderFormScreenState extends State<ReaderFormScreen> {
           label: 'ФИО',
           type: FormFieldType.text,
           controller: _nameController,
-          validator: (value) =>
-              Validators.maxLength(value, 100),
+          validator: (value) => Validators.maxLength(value, 100),
           onChanged: (_) => _markChanged(),
         ),
 
@@ -283,8 +270,7 @@ class _ReaderFormScreenState extends State<ReaderFormScreen> {
           label: 'Телефон',
           type: FormFieldType.text,
           controller: _phoneController,
-          validator: (value) =>
-              Validators.maxLength(value, 30),
+          validator: (value) => Validators.maxLength(value, 30),
           onChanged: (_) => _markChanged(),
         ),
       ],
@@ -324,26 +310,14 @@ class _ReaderFormScreenState extends State<ReaderFormScreen> {
 
           ListTile(
             title: const Text('Выдана'),
-            subtitle: Text(
-              _issuedAt
-                  .toLocal()
-                  .toString()
-                  .split(' ')
-                  .first,
-            ),
+            subtitle: Text(_issuedAt.toLocal().toString().split(' ').first),
             trailing: const Icon(Icons.calendar_today),
             onTap: () => _pickDate(true),
           ),
 
           ListTile(
             title: const Text('Действует до'),
-            subtitle: Text(
-              _expiresAt
-                  .toLocal()
-                  .toString()
-                  .split(' ')
-                  .first,
-            ),
+            subtitle: Text(_expiresAt.toLocal().toString().split(' ').first),
             trailing: const Icon(Icons.calendar_today),
             onTap: () => _pickDate(false),
           ),

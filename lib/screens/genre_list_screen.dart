@@ -14,10 +14,7 @@ import '../widgets/app_navigation_drawer.dart';
 class GenreListScreen extends StatefulWidget {
   final GenreQuery initialQuery;
 
-  const GenreListScreen({
-    super.key,
-    required this.initialQuery,
-  });
+  const GenreListScreen({super.key, required this.initialQuery});
 
   @override
   State<GenreListScreen> createState() => _GenreListScreenState();
@@ -60,7 +57,7 @@ class _GenreListScreenState extends State<GenreListScreen> {
         title: const Text('Удалить жанры?'),
         content: Text(
           'Вы действительно хотите удалить '
-              '${notifier.selected.length} выбранных жанров?',
+          '${notifier.selected.length} выбранных жанров?',
         ),
         actions: [
           TextButton(
@@ -98,17 +95,11 @@ class _GenreListScreenState extends State<GenreListScreen> {
     final query = notifier.query;
 
     if (notifier.status == LoadStatus.loading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (notifier.status == LoadStatus.error) {
-      return Center(
-        child: Text(
-          notifier.errorMessage ?? 'Ошибка загрузки',
-        ),
-      );
+      return Center(child: Text(notifier.errorMessage ?? 'Ошибка загрузки'));
     }
 
     return Scaffold(
@@ -123,16 +114,11 @@ class _GenreListScreenState extends State<GenreListScreen> {
           ),
         ],
       ),
-      drawer: const AppNavigationDrawer(
-        currentRoute: '/genres',
-      ),
+      drawer: const AppNavigationDrawer(currentRoute: '/genres'),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text(
-            'Жанры',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
+          Text('Жанры', style: Theme.of(context).textTheme.headlineMedium),
 
           const SizedBox(height: 16),
 
@@ -144,12 +130,12 @@ class _GenreListScreenState extends State<GenreListScreen> {
               suffixIcon: query.search.isEmpty
                   ? null
                   : IconButton(
-                onPressed: () {
-                  _searchController.clear();
-                  notifier.clearSearch();
-                },
-                icon: const Icon(Icons.clear),
-              ),
+                      onPressed: () {
+                        _searchController.clear();
+                        notifier.clearSearch();
+                      },
+                      icon: const Icon(Icons.clear),
+                    ),
               border: const OutlineInputBorder(),
             ),
             onChanged: notifier.search,
@@ -177,9 +163,7 @@ class _GenreListScreenState extends State<GenreListScreen> {
                 FilledButton.icon(
                   onPressed: _deleteSelected,
                   icon: const Icon(Icons.delete),
-                  label: Text(
-                    'Удалить (${notifier.selected.length})',
-                  ),
+                  label: Text('Удалить (${notifier.selected.length})'),
                 ),
             ],
           ),
@@ -187,9 +171,7 @@ class _GenreListScreenState extends State<GenreListScreen> {
           const SizedBox(height: 16),
 
           if (result.items.isEmpty)
-            const Center(
-              child: Text('Жанры не найдены'),
-            )
+            const Center(child: Text('Жанры не найдены'))
           else
             LayoutBuilder(
               builder: (context, constraints) {
@@ -198,25 +180,25 @@ class _GenreListScreenState extends State<GenreListScreen> {
                     children: result.items
                         .map(
                           (genre) => GenreCard(
-                        genre: genre,
-                        selected: notifier.selected.contains(genre.id),
-                        onSelectionChanged: () {
-                          notifier.toggleSelection(genre.id);
-                        },
-                        onOpen: () {
-                          context.go('/genres/${genre.id}');
-                        },
-                        onEdit: () {
-                          context.go('/genres/${genre.id}/edit');
-                        },
-                        onRestore: genre.isDeleted
-                            ? () => notifier.restoreItem(genre.id)
-                            : null,
-                        onHardDelete: genre.isDeleted
-                            ? () => notifier.hardDeleteItem(genre.id)
-                            : null,
-                      ),
-                    )
+                            genre: genre,
+                            selected: notifier.selected.contains(genre.id),
+                            onSelectionChanged: () {
+                              notifier.toggleSelection(genre.id);
+                            },
+                            onOpen: () {
+                              context.go('/genres/${genre.id}');
+                            },
+                            onEdit: () {
+                              context.go('/genres/${genre.id}/edit');
+                            },
+                            onRestore: genre.isDeleted
+                                ? () => notifier.restoreItem(genre.id)
+                                : null,
+                            onHardDelete: genre.isDeleted
+                                ? () => notifier.hardDeleteItem(genre.id)
+                                : null,
+                          ),
+                        )
                         .toList(),
                   );
                 }
@@ -238,9 +220,7 @@ class _GenreListScreenState extends State<GenreListScreen> {
                     TableColumnSpec<Genre>(
                       label: 'Описание',
                       sortField: 'description',
-                      build: (genre) => Text(
-                        genre.description,
-                      ),
+                      build: (genre) => Text(genre.description),
                     ),
                   ],
                   actions: (genre) => [

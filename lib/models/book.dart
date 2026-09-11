@@ -44,15 +44,42 @@ class Book {
   }
 
   factory Book.fromJson(Map<String, dynamic> json) {
+    final publisherId =
+        json['publisherId'] as int? ??
+        (json['publisher'] is Map
+            ? (json['publisher'] as Map)['id'] as int?
+            : null) ??
+        0;
+
+    final authorIds = json['authorIds'] is List
+        ? (json['authorIds'] as List).cast<int>()
+        : json['authors'] is List
+        ? (json['authors'] as List)
+              .whereType<Map>()
+              .map((author) => author['id'])
+              .whereType<int>()
+              .toList()
+        : <int>[];
+
+    final genreIds = json['genreIds'] is List
+        ? (json['genreIds'] as List).cast<int>()
+        : json['genres'] is List
+        ? (json['genres'] as List)
+              .whereType<Map>()
+              .map((genre) => genre['id'])
+              .whereType<int>()
+              .toList()
+        : <int>[];
+
     return Book(
       id: json['id'] as int? ?? 0,
       title: json['title'] as String? ?? '',
       isbn: json['isbn'] as String? ?? '',
       year: json['year'] as int? ?? 0,
       pages: json['pages'] as int? ?? 0,
-      publisherId: json['publisherId'] as int? ?? 0,
-      authorIds: (json['authorIds'] as List?)?.cast<int>() ?? const [],
-      genreIds: (json['genreIds'] as List?)?.cast<int>() ?? const [],
+      publisherId: publisherId,
+      authorIds: authorIds,
+      genreIds: genreIds,
       copiesTotal: json['copiesTotal'] as int? ?? 0,
       copiesAvailable: json['copiesAvailable'] as int? ?? 0,
       deletedAt: json['deletedAt'] == null
@@ -89,246 +116,3 @@ class Book {
     );
   }
 }
-
-const seedBooks = <Book>[
-  Book(
-    id: 1,
-    title: 'Война и мир',
-    isbn: '9785170908825',
-    year: 1869,
-    pages: 1225,
-    publisherId: 1,
-    authorIds: [1],
-    genreIds: [1],
-    copiesTotal: 10,
-    copiesAvailable: 7,
-  ),
-  Book(
-    id: 2,
-    title: 'Преступление и наказание',
-    isbn: '9785170875219',
-    year: 1866,
-    pages: 672,
-    publisherId: 1,
-    authorIds: [2],
-    genreIds: [1],
-    copiesTotal: 8,
-    copiesAvailable: 5,
-  ),
-  Book(
-    id: 3,
-    title: 'Анна Каренина',
-    isbn: '9785170891097',
-    year: 1878,
-    pages: 864,
-    publisherId: 1,
-    authorIds: [1],
-    genreIds: [1],
-    copiesTotal: 6,
-    copiesAvailable: 4,
-  ),
-  Book(
-    id: 4,
-    title: 'Идиот',
-    isbn: '9785170875226',
-    year: 1869,
-    pages: 640,
-    publisherId: 2,
-    authorIds: [2],
-    genreIds: [1],
-    copiesTotal: 7,
-    copiesAvailable: 3,
-  ),
-  Book(
-    id: 5,
-    title: 'Отцы и дети',
-    isbn: '9785170885126',
-    year: 1862,
-    pages: 320,
-    publisherId: 2,
-    authorIds: [3],
-    genreIds: [1],
-    copiesTotal: 5,
-    copiesAvailable: 5,
-  ),
-  Book(
-    id: 6,
-    title: '1984',
-    isbn: '9780451524935',
-    year: 1949,
-    pages: 328,
-    publisherId: 3,
-    authorIds: [4],
-    genreIds: [2],
-    copiesTotal: 12,
-    copiesAvailable: 9,
-  ),
-  Book(
-    id: 7,
-    title: 'Скотный двор',
-    isbn: '9780451526342',
-    year: 1945,
-    pages: 144,
-    publisherId: 3,
-    authorIds: [4],
-    genreIds: [2],
-    copiesTotal: 8,
-    copiesAvailable: 6,
-  ),
-  Book(
-    id: 8,
-    title: 'Старик и море',
-    isbn: '9780684801223',
-    year: 1952,
-    pages: 127,
-    publisherId: 4,
-    authorIds: [5],
-    genreIds: [3],
-    copiesTotal: 6,
-    copiesAvailable: 4,
-  ),
-  Book(
-    id: 9,
-    title: 'Прощай, оружие!',
-    isbn: '9780099273967',
-    year: 1929,
-    pages: 355,
-    publisherId: 4,
-    authorIds: [5],
-    genreIds: [3],
-    copiesTotal: 5,
-    copiesAvailable: 2,
-  ),
-  Book(
-    id: 10,
-    title: 'Сто лет одиночества',
-    isbn: '9780060883287',
-    year: 1967,
-    pages: 417,
-    publisherId: 5,
-    authorIds: [8],
-    genreIds: [2],
-    copiesTotal: 9,
-    copiesAvailable: 7,
-  ),
-  Book(
-    id: 11,
-    title: 'Мастер и Маргарита',
-    isbn: '9785171156973',
-    year: 1967,
-    pages: 480,
-    publisherId: 1,
-    authorIds: [3],
-    genreIds: [2],
-    copiesTotal: 10,
-    copiesAvailable: 8,
-  ),
-  Book(
-    id: 12,
-    title: 'Замок',
-    isbn: '9780805209990',
-    year: 1926,
-    pages: 352,
-    publisherId: 6,
-    authorIds: [6],
-    genreIds: [2],
-    copiesTotal: 5,
-    copiesAvailable: 3,
-  ),
-  Book(
-    id: 13,
-    title: 'Процесс',
-    isbn: '9780141182902',
-    year: 1925,
-    pages: 224,
-    publisherId: 6,
-    authorIds: [6],
-    genreIds: [2],
-    copiesTotal: 6,
-    copiesAvailable: 4,
-  ),
-  Book(
-    id: 14,
-    title: '451 градус по Фаренгейту',
-    isbn: '9781451678181',
-    year: 1953,
-    pages: 256,
-    publisherId: 7,
-    authorIds: [7],
-    genreIds: [4],
-    copiesTotal: 10,
-    copiesAvailable: 8,
-  ),
-  Book(
-    id: 15,
-    title: 'Марсианские хроники',
-    isbn: '9781451678198',
-    year: 1950,
-    pages: 317,
-    publisherId: 7,
-    authorIds: [7],
-    genreIds: [4],
-    copiesTotal: 7,
-    copiesAvailable: 5,
-  ),
-  Book(
-    id: 16,
-    title: 'Дон Кихот',
-    isbn: '9780060934347',
-    year: 1605,
-    pages: 992,
-    publisherId: 8,
-    authorIds: [8],
-    genreIds: [3],
-    copiesTotal: 4,
-    copiesAvailable: 2,
-  ),
-  Book(
-    id: 17,
-    title: 'Герой нашего времени',
-    isbn: '9785170873017',
-    year: 1840,
-    pages: 224,
-    publisherId: 2,
-    authorIds: [3],
-    genreIds: [1],
-    copiesTotal: 6,
-    copiesAvailable: 4,
-  ),
-  Book(
-    id: 18,
-    title: 'Доктор Живаго',
-    isbn: '9780307390950',
-    year: 1957,
-    pages: 592,
-    publisherId: 5,
-    authorIds: [3],
-    genreIds: [3],
-    copiesTotal: 5,
-    copiesAvailable: 3,
-  ),
-  Book(
-    id: 19,
-    title: 'Моби Дик',
-    isbn: '9781503280786',
-    year: 1851,
-    pages: 720,
-    publisherId: 8,
-    authorIds: [5],
-    genreIds: [3],
-    copiesTotal: 5,
-    copiesAvailable: 2,
-  ),
-  Book(
-    id: 20,
-    title: 'Великий Гэтсби',
-    isbn: '9780743273565',
-    year: 1925,
-    pages: 180,
-    publisherId: 4,
-    authorIds: [5],
-    genreIds: [3],
-    copiesTotal: 8,
-    copiesAvailable: 6,
-  ),
-];

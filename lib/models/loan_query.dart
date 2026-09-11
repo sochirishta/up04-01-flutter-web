@@ -32,8 +32,7 @@ class LoanQuery {
     return LoanQuery(
       search: search ?? this.search,
       status: status == _unset ? this.status : status as String?,
-      readerId:
-      readerId == _unset ? this.readerId : readerId as int?,
+      readerId: readerId == _unset ? this.readerId : readerId as int?,
       bookId: bookId == _unset ? this.bookId : bookId as int?,
       sortField: sortField ?? this.sortField,
       sortAscending: sortAscending ?? this.sortAscending,

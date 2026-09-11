@@ -1,9 +1,13 @@
 import '../models/page_result.dart';
 import '../models/reader.dart';
 import '../models/reader_query.dart';
+import 'package:dio/dio.dart';
 
 abstract interface class ReaderRepository {
-  Future<PageResult<Reader>> find(ReaderQuery query);
+  Future<PageResult<Reader>> find(
+    ReaderQuery query, {
+    CancelToken? cancelToken,
+  });
 
   Future<Reader?> findById(int id);
 

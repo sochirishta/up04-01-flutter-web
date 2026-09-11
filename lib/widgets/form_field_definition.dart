@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum FormFieldType {
-  text,
-  number,
-  dropdown,
-}
+enum FormFieldType { text, number, dropdown }
 
 class FormFieldDefinition {
   final String label;

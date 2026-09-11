@@ -4,10 +4,7 @@ import 'package:go_router/go_router.dart';
 class AppNavigationDrawer extends StatelessWidget {
   final String currentRoute;
 
-  const AppNavigationDrawer({
-    super.key,
-    required this.currentRoute,
-  });
+  const AppNavigationDrawer({super.key, required this.currentRoute});
 
   @override
   Widget build(BuildContext context) {
@@ -19,10 +16,7 @@ class AppNavigationDrawer extends StatelessWidget {
               child: Center(
                 child: Text(
                   'Библиотека',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -75,11 +69,11 @@ class AppNavigationDrawer extends StatelessWidget {
   }
 
   Widget _item(
-      BuildContext context, {
-        required IconData icon,
-        required String title,
-        required String route,
-      }) {
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String route,
+  }) {
     final selected = currentRoute == route;
 
     return ListTile(

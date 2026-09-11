@@ -6,17 +6,15 @@ import '../repositories/publisher_repository.dart';
 import 'entity_list_notifier.dart';
 
 class PublisherListNotifier
-    extends EntityListNotifier<
-        Publisher,
-        PublisherQuery> {
+    extends EntityListNotifier<Publisher, PublisherQuery> {
   PublisherListNotifier(this._repository)
-      : super(
-    find: _repository.find,
-    deleteMany: _repository.deleteMany,
-    restore: _repository.restore,
-    hardDelete: _repository.hardDelete,
-    initialQuery: const PublisherQuery(),
-  );
+    : super(
+        find: _repository.find,
+        deleteMany: _repository.deleteMany,
+        restore: _repository.restore,
+        hardDelete: _repository.hardDelete,
+        initialQuery: const PublisherQuery(),
+      );
 
   final PublisherRepository _repository;
 
@@ -35,28 +33,15 @@ class PublisherListNotifier
   void search(String value) {
     _searchDebounce?.cancel();
 
-    _searchDebounce = Timer(
-      const Duration(milliseconds: 350),
-          () {
-        applyQuery(
-          query.copyWith(
-            search: value.trim(),
-            page: 1,
-          ),
-        );
-      },
-    );
+    _searchDebounce = Timer(const Duration(milliseconds: 350), () {
+      applyQuery(query.copyWith(search: value.trim(), page: 1));
+    });
   }
 
   Future<void> clearSearch() {
     _searchDebounce?.cancel();
 
-    return applyQuery(
-      query.copyWith(
-        search: '',
-        page: 1,
-      ),
-    );
+    return applyQuery(query.copyWith(search: '', page: 1));
   }
 
   Future<void> sort(String field) {
@@ -65,72 +50,42 @@ class PublisherListNotifier
     return applyQuery(
       query.copyWith(
         sortField: field,
-        sortAscending: sameField
-            ? !query.sortAscending
-            : true,
+        sortAscending: sameField ? !query.sortAscending : true,
         page: 1,
       ),
     );
   }
 
   Future<void> firstPage() {
-    return applyQuery(
-      query.copyWith(page: 1),
-    );
+    return applyQuery(query.copyWith(page: 1));
   }
 
   Future<void> previousPage() {
-    return applyQuery(
-      query.copyWith(
-        page: query.page - 1,
-      ),
-    );
+    return applyQuery(query.copyWith(page: query.page - 1));
   }
 
   Future<void> nextPage() {
-    return applyQuery(
-      query.copyWith(
-        page: query.page + 1,
-      ),
-    );
+    return applyQuery(query.copyWith(page: query.page + 1));
   }
 
   Future<void> lastPage() {
-    return applyQuery(
-      query.copyWith(
-        page: result.totalPages,
-      ),
-    );
+    return applyQuery(query.copyWith(page: result.totalPages));
   }
 
   Future<void> changePageSize(int size) {
-    return applyQuery(
-      query.copyWith(
-        page: 1,
-        size: size,
-      ),
-    );
+    return applyQuery(query.copyWith(page: 1, size: size));
   }
 
   Future<void> setIncludeDeleted(bool value) {
-    return applyQuery(
-      query.copyWith(
-        includeDeleted: value,
-        page: 1,
-      ),
-    );
+    return applyQuery(query.copyWith(includeDeleted: value, page: 1));
   }
 
-  Future<void> createPublisher(
-      Publisher publisher,
-      ) async {
+  Future<void> createPublisher(Publisher publisher) async {
     await _repository.create(publisher);
     await load();
   }
 
-  Future<void> updatePublisher(
-      Publisher publisher,
-      ) async {
+  Future<void> updatePublisher(Publisher publisher) async {
     await _repository.update(publisher);
     await load();
   }
@@ -146,19 +101,13 @@ class PublisherListNotifier
 
   String urlFor(PublisherQuery value) {
     final params = <String, String>{
-      if (value.search.isNotEmpty)
-        'search': value.search,
-      'sort':
-      '${value.sortField},${value.sortAscending ? 'asc' : 'desc'}',
+      if (value.search.isNotEmpty) 'search': value.search,
+      'sort': '${value.sortField},${value.sortAscending ? 'asc' : 'desc'}',
       'page': '${value.page}',
       'size': '${value.size}',
-      if (value.includeDeleted)
-        'deleted': 'true',
+      if (value.includeDeleted) 'deleted': 'true',
     };
 
-    return Uri(
-      path: '/publishers',
-      queryParameters: params,
-    ).toString();
+    return Uri(path: '/publishers', queryParameters: params).toString();
   }
 }

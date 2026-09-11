@@ -39,64 +39,11 @@ class Publisher {
     int? foundedYear,
     DateTime? deletedAt,
     bool clearDeletedAt = false,
-  }) =>
-      Publisher(
-        id: id,
-        name: name ?? this.name,
-        city: city ?? this.city,
-        foundedYear: foundedYear ?? this.foundedYear,
-        deletedAt:
-        clearDeletedAt ? null : (deletedAt ?? this.deletedAt),
-      );
+  }) => Publisher(
+    id: id,
+    name: name ?? this.name,
+    city: city ?? this.city,
+    foundedYear: foundedYear ?? this.foundedYear,
+    deletedAt: clearDeletedAt ? null : (deletedAt ?? this.deletedAt),
+  );
 }
-
-const List<Publisher> seedPublishers = [
-  Publisher(
-    id: 1,
-    name: 'Эксмо',
-    city: 'Москва',
-    foundedYear: 1993,
-  ),
-  Publisher(
-    id: 2,
-    name: 'АСТ',
-    city: 'Москва',
-    foundedYear: 1990,
-  ),
-  Publisher(
-    id: 3,
-    name: 'МИФ',
-    city: 'Москва',
-    foundedYear: 2005,
-  ),
-  Publisher(
-    id: 4,
-    name: 'Азбука',
-    city: 'Санкт-Петербург',
-    foundedYear: 1995,
-  ),
-  Publisher(
-    id: 5,
-    name: 'Penguin Books',
-    city: 'London',
-    foundedYear: 1935,
-  ),
-  Publisher(
-    id: 6,
-    name: 'HarperCollins',
-    city: 'New York',
-    foundedYear: 1989,
-  ),
-  Publisher(
-    id: 7,
-    name: 'Росмэн',
-    city: 'Москва',
-    foundedYear: 1992,
-  ),
-  Publisher(
-    id: 8,
-    name: 'Иностранка',
-    city: 'Москва',
-    foundedYear: 2000,
-  ),
-];

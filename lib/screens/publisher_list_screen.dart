@@ -14,18 +14,13 @@ import '../widgets/app_navigation_drawer.dart';
 class PublisherListScreen extends StatefulWidget {
   final PublisherQuery initialQuery;
 
-  const PublisherListScreen({
-    super.key,
-    required this.initialQuery,
-  });
+  const PublisherListScreen({super.key, required this.initialQuery});
 
   @override
-  State<PublisherListScreen> createState() =>
-      _PublisherListScreenState();
+  State<PublisherListScreen> createState() => _PublisherListScreenState();
 }
 
-class _PublisherListScreenState
-    extends State<PublisherListScreen> {
+class _PublisherListScreenState extends State<PublisherListScreen> {
   final _searchController = TextEditingController();
 
   @override
@@ -48,8 +43,7 @@ class _PublisherListScreenState
 
     final newLocation = notifier.urlFor(notifier.query);
 
-    if (GoRouterState.of(context).uri.toString() !=
-        newLocation) {
+    if (GoRouterState.of(context).uri.toString() != newLocation) {
       context.go(newLocation);
     }
   }
@@ -65,7 +59,7 @@ class _PublisherListScreenState
         title: const Text('Удалить издателей?'),
         content: Text(
           'Вы действительно хотите удалить '
-              '${notifier.selected.length} выбранных издателей?',
+          '${notifier.selected.length} выбранных издателей?',
         ),
         actions: [
           TextButton(
@@ -91,9 +85,7 @@ class _PublisherListScreenState
 
   @override
   void dispose() {
-    context
-        .read<PublisherListNotifier>()
-        .removeListener(_updateUrl);
+    context.read<PublisherListNotifier>().removeListener(_updateUrl);
 
     _searchController.dispose();
 
@@ -108,17 +100,11 @@ class _PublisherListScreenState
     final query = notifier.query;
 
     if (notifier.status == LoadStatus.loading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (notifier.status == LoadStatus.error) {
-      return Center(
-        child: Text(
-          notifier.errorMessage ?? 'Ошибка загрузки',
-        ),
-      );
+      return Center(child: Text(notifier.errorMessage ?? 'Ошибка загрузки'));
     }
 
     return Scaffold(
@@ -133,18 +119,11 @@ class _PublisherListScreenState
           ),
         ],
       ),
-      drawer: const AppNavigationDrawer(
-        currentRoute: '/publishers',
-      ),
+      drawer: const AppNavigationDrawer(currentRoute: '/publishers'),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text(
-            'Издатели',
-            style: Theme.of(context)
-                .textTheme
-                .headlineMedium,
-          ),
+          Text('Издатели', style: Theme.of(context).textTheme.headlineMedium),
 
           const SizedBox(height: 16),
 
@@ -156,12 +135,12 @@ class _PublisherListScreenState
               suffixIcon: query.search.isEmpty
                   ? null
                   : IconButton(
-                onPressed: () {
-                  _searchController.clear();
-                  notifier.clearSearch();
-                },
-                icon: const Icon(Icons.clear),
-              ),
+                      onPressed: () {
+                        _searchController.clear();
+                        notifier.clearSearch();
+                      },
+                      icon: const Icon(Icons.clear),
+                    ),
               border: const OutlineInputBorder(),
             ),
             onChanged: notifier.search,
@@ -174,9 +153,7 @@ class _PublisherListScreenState
             runSpacing: 8,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Text(
-                'Найдено: ${result.total}',
-              ),
+              Text('Найдено: ${result.total}'),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -191,9 +168,7 @@ class _PublisherListScreenState
                 FilledButton.icon(
                   onPressed: _deleteSelected,
                   icon: const Icon(Icons.delete),
-                  label: Text(
-                    'Удалить (${notifier.selected.length})',
-                  ),
+                  label: Text('Удалить (${notifier.selected.length})'),
                 ),
             ],
           ),
@@ -201,11 +176,7 @@ class _PublisherListScreenState
           const SizedBox(height: 16),
 
           if (result.items.isEmpty)
-            const Center(
-              child: Text(
-                'Издатели не найдены',
-              ),
-            )
+            const Center(child: Text('Издатели не найдены'))
           else
             LayoutBuilder(
               builder: (context, constraints) {
@@ -214,37 +185,25 @@ class _PublisherListScreenState
                     children: result.items
                         .map(
                           (publisher) => PublisherCard(
-                        publisher: publisher,
-                        selected: notifier.selected.contains(
-                          publisher.id,
-                        ),
-                        onSelectionChanged: () {
-                          notifier.toggleSelection(
-                            publisher.id,
-                          );
-                        },
-                        onOpen: () {
-                          context.go(
-                            '/publishers/${publisher.id}',
-                          );
-                        },
-                        onEdit: () {
-                          context.go(
-                            '/publishers/${publisher.id}/edit',
-                          );
-                        },
-                        onRestore: publisher.isDeleted
-                            ? () => notifier.restoreItem(
-                          publisher.id,
+                            publisher: publisher,
+                            selected: notifier.selected.contains(publisher.id),
+                            onSelectionChanged: () {
+                              notifier.toggleSelection(publisher.id);
+                            },
+                            onOpen: () {
+                              context.go('/publishers/${publisher.id}');
+                            },
+                            onEdit: () {
+                              context.go('/publishers/${publisher.id}/edit');
+                            },
+                            onRestore: publisher.isDeleted
+                                ? () => notifier.restoreItem(publisher.id)
+                                : null,
+                            onHardDelete: publisher.isDeleted
+                                ? () => notifier.hardDeleteItem(publisher.id)
+                                : null,
+                          ),
                         )
-                            : null,
-                        onHardDelete: publisher.isDeleted
-                            ? () => notifier.hardDeleteItem(
-                          publisher.id,
-                        )
-                            : null,
-                      ),
-                    )
                         .toList(),
                   );
                 }
@@ -261,42 +220,32 @@ class _PublisherListScreenState
                     TableColumnSpec<Publisher>(
                       label: 'Название',
                       sortField: 'name',
-                      build: (publisher) =>
-                          Text(publisher.name),
+                      build: (publisher) => Text(publisher.name),
                     ),
                     TableColumnSpec<Publisher>(
                       label: 'Город',
                       sortField: 'city',
-                      build: (publisher) =>
-                          Text(publisher.city),
+                      build: (publisher) => Text(publisher.city),
                     ),
                     TableColumnSpec<Publisher>(
                       label: 'Год основания',
                       sortField: 'foundedYear',
                       build: (publisher) =>
-                          Text(
-                            publisher.foundedYear.toString(),
-                          ),
+                          Text(publisher.foundedYear.toString()),
                     ),
                   ],
                   actions: (publisher) => [
                     IconButton(
                       tooltip: 'Открыть',
                       onPressed: () {
-                        context.go(
-                          '/publishers/${publisher.id}',
-                        );
+                        context.go('/publishers/${publisher.id}');
                       },
-                      icon: const Icon(
-                        Icons.open_in_new,
-                      ),
+                      icon: const Icon(Icons.open_in_new),
                     ),
                     IconButton(
                       tooltip: 'Редактировать',
                       onPressed: () {
-                        context.go(
-                          '/publishers/${publisher.id}/edit',
-                        );
+                        context.go('/publishers/${publisher.id}/edit');
                       },
                       icon: const Icon(Icons.edit),
                     ),
@@ -304,9 +253,7 @@ class _PublisherListScreenState
                       IconButton(
                         tooltip: 'Восстановить',
                         onPressed: () {
-                          notifier.restoreItem(
-                            publisher.id,
-                          );
+                          notifier.restoreItem(publisher.id);
                         },
                         icon: const Icon(Icons.restore),
                       ),
@@ -314,13 +261,9 @@ class _PublisherListScreenState
                       IconButton(
                         tooltip: 'Удалить окончательно',
                         onPressed: () {
-                          notifier.hardDeleteItem(
-                            publisher.id,
-                          );
+                          notifier.hardDeleteItem(publisher.id);
                         },
-                        icon: const Icon(
-                          Icons.delete_forever,
-                        ),
+                        icon: const Icon(Icons.delete_forever),
                       ),
                   ],
                 );

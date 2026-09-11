@@ -32,8 +32,7 @@ class PublisherCard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Row(
-            crossAxisAlignment:
-            CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Checkbox(
                 value: selected,
@@ -44,31 +43,24 @@ class PublisherCard extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Column(
-                  crossAxisAlignment:
-                  CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       publisher.name,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium,
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 6),
-                    Text(
-                      'Город: ${publisher.city}',
-                    ),
+                    Text('Город: ${publisher.city}'),
                     Text(
                       'Год основания: '
-                          '${publisher.foundedYear}',
+                      '${publisher.foundedYear}',
                     ),
                     if (publisher.isDeleted) ...[
                       const SizedBox(height: 6),
                       Text(
                         'Удалён',
                         style: TextStyle(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .error,
+                          color: Theme.of(context).colorScheme.error,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -80,9 +72,7 @@ class PublisherCard extends StatelessWidget {
                         IconButton(
                           tooltip: 'Открыть',
                           onPressed: onOpen,
-                          icon: const Icon(
-                            Icons.open_in_new,
-                          ),
+                          icon: const Icon(Icons.open_in_new),
                         ),
                         IconButton(
                           tooltip: 'Редактировать',
@@ -93,17 +83,12 @@ class PublisherCard extends StatelessWidget {
                           IconButton(
                             tooltip: 'Восстановить',
                             onPressed: onRestore,
-                            icon: const Icon(
-                              Icons.restore,
-                            ),
+                            icon: const Icon(Icons.restore),
                           ),
                           IconButton(
-                            tooltip:
-                            'Удалить окончательно',
+                            tooltip: 'Удалить окончательно',
                             onPressed: onHardDelete,
-                            icon: const Icon(
-                              Icons.delete_forever,
-                            ),
+                            icon: const Icon(Icons.delete_forever),
                           ),
                         ],
                       ],

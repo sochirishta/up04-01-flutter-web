@@ -7,9 +7,7 @@ class Validators {
     return null;
   }
 
-  static String? maxLength(
-      String? value,
-      int max, ) {
+  static String? maxLength(String? value, int max) {
     final requiredError = required(value);
 
     if (requiredError != null) {
@@ -23,11 +21,7 @@ class Validators {
     return null;
   }
 
-  static String? integer(
-      String? value, {
-        int? min,
-        int? max,
-      }) {
+  static String? integer(String? value, {int? min, int? max}) {
     final requiredError = required(value);
 
     if (requiredError != null) {
@@ -52,16 +46,10 @@ class Validators {
   }
 
   static String? positiveInteger(String? value) {
-    return integer(
-      value,
-      min: 1,
-    );
+    return integer(value, min: 1);
   }
 
-  static String? copiesAvailable(
-      String? availableValue,
-      String? totalValue,
-      ) {
+  static String? copiesAvailable(String? availableValue, String? totalValue) {
     final requiredError = required(availableValue);
 
     if (requiredError != null) {

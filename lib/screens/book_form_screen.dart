@@ -2,33 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../core/api_exceptions.dart';
 import '../core/validators.dart';
 
 import '../models/author.dart';
-import '../models/author_query.dart';
 import '../models/book.dart';
 import '../models/book_query.dart';
 import '../models/genre.dart';
-import '../models/genre_query.dart';
 import '../models/publisher.dart';
-import '../models/publisher_query.dart';
 
-import '../repositories/author_repository.dart';
 import '../repositories/book_repository.dart';
-import '../repositories/genre_repository.dart';
-import '../repositories/publisher_repository.dart';
 
-import '../state/book_list_notifier.dart';
+import '../state/reference_cache.dart';
+
 import '../widgets/entity_form.dart';
 import '../widgets/form_field_definition.dart';
 
 class BookFormScreen extends StatefulWidget {
   final int? id;
 
-  const BookFormScreen({
-    super.key,
-    this.id,
-  });
+  const BookFormScreen({super.key, this.id});
 
   bool get isEditing => id != null;
 
@@ -57,16 +50,17 @@ class _BookFormScreenState extends State<BookFormScreen> {
   List<int> _authorIds = [];
   List<int> _genreIds = [];
 
-  List<Author> _authors = [];
-  List<Genre> _genres = [];
-  List<Publisher> _publishers = [];
-
   List<Book> _allBooks = [];
 
   @override
   void initState() {
     super.initState();
-    _loadData();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      _loadData();
+    });
   }
 
   @override
@@ -91,57 +85,18 @@ class _BookFormScreenState extends State<BookFormScreen> {
 
   Future<void> _loadData() async {
     try {
-      final authorRepository = context.read<AuthorRepository>();
-      final genreRepository = context.read<GenreRepository>();
-      final publisherRepository =
-      context.read<PublisherRepository>();
+      final referenceCache = context.read<ReferenceCache>();
       final bookRepository = context.read<BookRepository>();
 
-      final authorsFuture = authorRepository.find(
-        const AuthorQuery(
-          page: 1,
-          size: 1000,
-          includeDeleted: false,
-        ),
-      );
+      await referenceCache.load();
 
-      final genresFuture = genreRepository.find(
-        const GenreQuery(
-          page: 1,
-          size: 1000,
-          includeDeleted: false,
-        ),
+      final booksResult = await bookRepository.find(
+        const BookQuery(page: 1, size: 10000, includeDeleted: true),
       );
-
-      final publishersFuture = publisherRepository.find(
-        const PublisherQuery(
-          page: 1,
-          size: 1000,
-          includeDeleted: false,
-        ),
-      );
-
-      final booksFuture = bookRepository.find(
-        const BookQuery(
-          page: 1,
-          size: 10000,
-          includeDeleted: true,
-        ),
-      );
-
-      final results = await Future.wait([
-        authorsFuture,
-        genresFuture,
-        publishersFuture,
-        booksFuture,
-      ]);
 
       if (!mounted) return;
 
-      _authors = results[0].items as List<Author>;
-      _genres = results[1].items as List<Genre>;
-      _publishers = results[2].items as List<Publisher>;
-      _allBooks = results[3].items as List<Book>;
+      _allBooks = booksResult.items;
 
       if (widget.isEditing) {
         final book = await bookRepository.findById(widget.id!);
@@ -157,10 +112,8 @@ class _BookFormScreenState extends State<BookFormScreen> {
         _isbnController.text = book.isbn;
         _yearController.text = book.year.toString();
         _pagesController.text = book.pages.toString();
-        _copiesTotalController.text =
-            book.copiesTotal.toString();
-        _copiesAvailableController.text =
-            book.copiesAvailable.toString();
+        _copiesTotalController.text = book.copiesTotal.toString();
+        _copiesAvailableController.text = book.copiesAvailable.toString();
 
         _publisherId = book.publisherId;
         _authorIds = [...book.authorIds];
@@ -169,11 +122,9 @@ class _BookFormScreenState extends State<BookFormScreen> {
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString()),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       if (mounted) {
         setState(() {
@@ -190,8 +141,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
     List<int> genreIds = const [],
   }) {
     return _allBooks.where((book) {
-      if (publisherId != null &&
-          book.publisherId != publisherId) {
+      if (publisherId != null && book.publisherId != publisherId) {
         return false;
       }
 
@@ -217,15 +167,13 @@ class _BookFormScreenState extends State<BookFormScreen> {
       genreIds: _genreIds,
     );
 
-    final availableIds = books
-        .expand((book) => book.authorIds)
-        .toSet();
+    final availableIds = books.expand((book) => book.authorIds).toSet();
 
     availableIds.addAll(_authorIds);
 
-    return _authors
-        .where((author) => availableIds.contains(author.id))
-        .toList();
+    final authors = context.read<ReferenceCache>().authors;
+
+    return authors.where((author) => availableIds.contains(author.id)).toList();
   }
 
   List<Genre> get _filteredGenres {
@@ -234,35 +182,28 @@ class _BookFormScreenState extends State<BookFormScreen> {
       authorIds: _authorIds,
     );
 
-    final availableIds = books
-        .expand((book) => book.genreIds)
-        .toSet();
+    final availableIds = books.expand((book) => book.genreIds).toSet();
 
     availableIds.addAll(_genreIds);
 
-    return _genres
-        .where((genre) => availableIds.contains(genre.id))
-        .toList();
+    final genres = context.read<ReferenceCache>().genres;
+
+    return genres.where((genre) => availableIds.contains(genre.id)).toList();
   }
 
   List<Publisher> get _filteredPublishers {
-    final books = _booksForCascade(
-      authorIds: _authorIds,
-      genreIds: _genreIds,
-    );
+    final books = _booksForCascade(authorIds: _authorIds, genreIds: _genreIds);
 
-    final availableIds = books
-        .map((book) => book.publisherId)
-        .toSet();
+    final availableIds = books.map((book) => book.publisherId).toSet();
 
     if (_publisherId != null) {
       availableIds.add(_publisherId!);
     }
 
-    return _publishers
-        .where(
-          (publisher) => availableIds.contains(publisher.id),
-    )
+    final publishers = context.read<ReferenceCache>().publishers;
+
+    return publishers
+        .where((publisher) => availableIds.contains(publisher.id))
         .toList();
   }
 
@@ -281,32 +222,11 @@ class _BookFormScreenState extends State<BookFormScreen> {
 
       final isbn = _isbnController.text.trim();
 
-      final notifier = context.read<BookListNotifier>();
-
-      final isFree = await notifier.isIsbnFree(
-        isbn,
-        exceptId: widget.id,
-      );
-
-      if (!isFree) {
-        if (!mounted) return;
-
-        setState(() {
-          _isbnError =
-          'Книга с таким ISBN уже существует';
-          _isSaving = false;
-        });
-
-        return;
-      }
-
       final title = _titleController.text.trim();
       final year = int.parse(_yearController.text);
       final pages = int.parse(_pagesController.text);
-      final copiesTotal =
-      int.parse(_copiesTotalController.text);
-      final copiesAvailable =
-      int.parse(_copiesAvailableController.text);
+      final copiesTotal = int.parse(_copiesTotalController.text);
+      final copiesAvailable = int.parse(_copiesAvailableController.text);
 
       final publisherId = _publisherId;
 
@@ -321,8 +241,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
       }
 
       if (widget.isEditing) {
-        final oldBook =
-        await repository.findById(widget.id!);
+        final oldBook = await repository.findById(widget.id!);
 
         if (oldBook == null || !mounted) {
           return;
@@ -365,14 +284,14 @@ class _BookFormScreenState extends State<BookFormScreen> {
       });
 
       context.go('/books');
+    } on ValidationException catch (e) {
+      setState(() {
+        _isbnError = e.errors['isbn'] ?? e.message;
+      });
     } catch (e) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString()),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       if (mounted) {
         setState(() {
@@ -405,8 +324,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
               spacing: 8,
               runSpacing: 8,
               children: _filteredAuthors.map((author) {
-                final selected =
-                _authorIds.contains(author.id);
+                final selected = _authorIds.contains(author.id);
 
                 return FilterChip(
                   label: Text(author.fullName),
@@ -457,8 +375,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
               spacing: 8,
               runSpacing: 8,
               children: _filteredGenres.map((genre) {
-                final selected =
-                _genreIds.contains(genre.id);
+                final selected = _genreIds.contains(genre.id);
 
                 return FilterChip(
                   label: Text(genre.name),
@@ -490,33 +407,27 @@ class _BookFormScreenState extends State<BookFormScreen> {
   Widget build(BuildContext context) {
     return EntityForm(
       formKey: _formKey,
-      title: widget.isEditing
-          ? 'Редактирование книги'
-          : 'Новая книга',
+      title: widget.isEditing ? 'Редактирование книги' : 'Новая книга',
       isEditing: widget.isEditing,
       isLoading: _isLoading,
       isSaving: _isSaving,
       hasUnsavedChanges: _hasUnsavedChanges,
       onSubmit: _submit,
       onCancel: () => context.go('/books'),
-
       fields: [
         FormFieldDefinition(
           label: 'Название',
           type: FormFieldType.text,
           controller: _titleController,
-          validator: (value) =>
-              Validators.maxLength(value, 200),
+          validator: (value) => Validators.maxLength(value, 200),
           onChanged: (_) => _markChanged(),
         ),
-
         FormFieldDefinition(
           label: 'ISBN',
           type: FormFieldType.text,
           controller: _isbnController,
           errorText: _isbnError,
-          validator: (value) =>
-              Validators.maxLength(value, 20),
+          validator: (value) => Validators.maxLength(value, 20),
           onChanged: (_) {
             _markChanged();
 
@@ -527,19 +438,14 @@ class _BookFormScreenState extends State<BookFormScreen> {
             }
           },
         ),
-
         FormFieldDefinition(
           label: 'Год',
           type: FormFieldType.number,
           controller: _yearController,
-          validator: (value) => Validators.integer(
-            value,
-            min: 0,
-            max: DateTime.now().year,
-          ),
+          validator: (value) =>
+              Validators.integer(value, min: 0, max: DateTime.now().year),
           onChanged: (_) => _markChanged(),
         ),
-
         FormFieldDefinition(
           label: 'Количество страниц',
           type: FormFieldType.number,
@@ -547,7 +453,6 @@ class _BookFormScreenState extends State<BookFormScreen> {
           validator: Validators.positiveInteger,
           onChanged: (_) => _markChanged(),
         ),
-
         FormFieldDefinition(
           label: 'Всего экземпляров',
           type: FormFieldType.number,
@@ -555,19 +460,14 @@ class _BookFormScreenState extends State<BookFormScreen> {
           validator: Validators.positiveInteger,
           onChanged: (_) => _markChanged(),
         ),
-
         FormFieldDefinition(
           label: 'Доступно экземпляров',
           type: FormFieldType.number,
           controller: _copiesAvailableController,
           validator: (value) =>
-              Validators.copiesAvailable(
-                value,
-                _copiesTotalController.text,
-              ),
+              Validators.copiesAvailable(value, _copiesTotalController.text),
           onChanged: (_) => _markChanged(),
         ),
-
         FormFieldDefinition(
           label: 'Издательство',
           type: FormFieldType.dropdown,
@@ -575,10 +475,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
           items: _filteredPublishers.map((publisher) {
             return DropdownMenuItem<int>(
               value: publisher.id,
-              child: Text(
-                publisher.name,
-                overflow: TextOverflow.ellipsis,
-              ),
+              child: Text(publisher.name, overflow: TextOverflow.ellipsis),
             );
           }).toList(),
           validator: (value) {
@@ -597,11 +494,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
           },
         ),
       ],
-
-      customFields: [
-        _buildAuthorsField(),
-        _buildGenresField(),
-      ],
+      customFields: [_buildAuthorsField(), _buildGenresField()],
     );
   }
 }

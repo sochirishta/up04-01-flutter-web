@@ -41,7 +41,7 @@ class EntityForm extends StatelessWidget {
         title: const Text('Несохранённые изменения'),
         content: const Text(
           'У вас есть несохранённые изменения. '
-              'Вы действительно хотите уйти?',
+          'Вы действительно хотите уйти?',
         ),
         actions: [
           TextButton(
@@ -70,7 +70,8 @@ class EntityForm extends StatelessWidget {
             validator: field.validator,
             enabled: field.enabled,
             maxLines: field.maxLines,
-            keyboardType: field.keyboardType ??
+            keyboardType:
+                field.keyboardType ??
                 (field.type == FormFieldType.number
                     ? TextInputType.number
                     : TextInputType.text),
@@ -107,12 +108,8 @@ class EntityForm extends StatelessWidget {
   Widget build(BuildContext context) {
     if (isLoading) {
       return Scaffold(
-        appBar: AppBar(
-          title: Text(title),
-        ),
-        body: const Center(
-          child: CircularProgressIndicator(),
-        ),
+        appBar: AppBar(title: Text(title)),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -130,9 +127,7 @@ class EntityForm extends StatelessWidget {
         }
       },
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(title),
-        ),
+        appBar: AppBar(title: Text(title)),
         body: Form(
           key: formKey,
           autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -149,10 +144,10 @@ class EntityForm extends StatelessWidget {
                     onPressed: isSaving
                         ? null
                         : () async {
-                      if (await _confirmLeave(context)) {
-                        onCancel();
-                      }
-                    },
+                            if (await _confirmLeave(context)) {
+                              onCancel();
+                            }
+                          },
                     child: const Text('Отмена'),
                   ),
                   const SizedBox(width: 12),
@@ -160,15 +155,11 @@ class EntityForm extends StatelessWidget {
                     onPressed: isSaving ? null : onSubmit,
                     child: isSaving
                         ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                      ),
-                    )
-                        : Text(
-                      isEditing ? 'Сохранить' : 'Создать',
-                    ),
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(isEditing ? 'Сохранить' : 'Создать'),
                   ),
                 ],
               ),

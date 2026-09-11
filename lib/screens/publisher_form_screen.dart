@@ -11,25 +11,19 @@ import '../widgets/form_field_definition.dart';
 class PublisherFormScreen extends StatefulWidget {
   final int? id;
 
-  const PublisherFormScreen({
-    super.key,
-    this.id,
-  });
+  const PublisherFormScreen({super.key, this.id});
 
   bool get isEditing => id != null;
 
   @override
-  State<PublisherFormScreen> createState() =>
-      _PublisherFormScreenState();
+  State<PublisherFormScreen> createState() => _PublisherFormScreenState();
 }
 
-class _PublisherFormScreenState
-    extends State<PublisherFormScreen> {
+class _PublisherFormScreenState extends State<PublisherFormScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _hasUnsavedChanges = false;
 
-  final _nameController =
-  TextEditingController();
+  final _nameController = TextEditingController();
 
   void _markChanged() {
     if (!_hasUnsavedChanges) {
@@ -39,11 +33,9 @@ class _PublisherFormScreenState
     }
   }
 
-  final _cityController =
-  TextEditingController();
+  final _cityController = TextEditingController();
 
-  final _foundedYearController =
-  TextEditingController();
+  final _foundedYearController = TextEditingController();
 
   bool _isLoading = false;
   bool _isSaving = false;
@@ -70,11 +62,9 @@ class _PublisherFormScreenState
       _isLoading = true;
     });
 
-    final repository =
-    context.read<PublisherRepository>();
+    final repository = context.read<PublisherRepository>();
 
-    final publisher =
-    await repository.findById(widget.id!);
+    final publisher = await repository.findById(widget.id!);
 
     if (!mounted) return;
 
@@ -83,14 +73,11 @@ class _PublisherFormScreenState
       return;
     }
 
-    _nameController.text =
-        publisher.name;
+    _nameController.text = publisher.name;
 
-    _cityController.text =
-        publisher.city;
+    _cityController.text = publisher.city;
 
-    _foundedYearController.text =
-        publisher.foundedYear.toString();
+    _foundedYearController.text = publisher.foundedYear.toString();
 
     setState(() {
       _isLoading = false;
@@ -106,29 +93,20 @@ class _PublisherFormScreenState
       _isSaving = true;
     });
 
-    final repository =
-    context.read<PublisherRepository>();
+    final repository = context.read<PublisherRepository>();
 
-    final name =
-    _nameController.text.trim();
+    final name = _nameController.text.trim();
 
-    final city =
-    _cityController.text.trim();
+    final city = _cityController.text.trim();
 
-    final foundedYear =
-    int.parse(
-      _foundedYearController.text.trim(),
-    );
+    final foundedYear = int.parse(_foundedYearController.text.trim());
 
     try {
       if (widget.isEditing) {
-        final oldPublisher =
-        await repository.findById(widget.id!);
+        final oldPublisher = await repository.findById(widget.id!);
 
         if (oldPublisher == null) {
-          throw StateError(
-            'Издательство не найдено',
-          );
+          throw StateError('Издательство не найдено');
         }
 
         await repository.update(
@@ -140,12 +118,7 @@ class _PublisherFormScreenState
         );
       } else {
         await repository.create(
-          Publisher(
-            id: 0,
-            name: name,
-            city: city,
-            foundedYear: foundedYear,
-          ),
+          Publisher(id: 0, name: name, city: city, foundedYear: foundedYear),
         );
       }
 
@@ -155,11 +128,7 @@ class _PublisherFormScreenState
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$e'),
-        ),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
     } finally {
       if (mounted) {
         setState(() {
@@ -181,15 +150,13 @@ class _PublisherFormScreenState
       isSaving: _isSaving,
       hasUnsavedChanges: _hasUnsavedChanges,
       onSubmit: _submit,
-      onCancel: () =>
-          context.go('/publishers'),
+      onCancel: () => context.go('/publishers'),
       fields: [
         FormFieldDefinition(
           label: 'Название',
           type: FormFieldType.text,
           controller: _nameController,
-          validator: (value) =>
-              Validators.maxLength(value, 100),
+          validator: (value) => Validators.maxLength(value, 100),
           onChanged: (_) => _markChanged(),
         ),
 
@@ -197,8 +164,7 @@ class _PublisherFormScreenState
           label: 'Город',
           type: FormFieldType.text,
           controller: _cityController,
-          validator: (value) =>
-              Validators.maxLength(value, 100),
+          validator: (value) => Validators.maxLength(value, 100),
           onChanged: (_) => _markChanged(),
         ),
 
@@ -206,11 +172,8 @@ class _PublisherFormScreenState
           label: 'Год основания',
           type: FormFieldType.number,
           controller: _foundedYearController,
-          validator: (value) => Validators.integer(
-            value,
-            min: 0,
-            max: DateTime.now().year,
-          ),
+          validator: (value) =>
+              Validators.integer(value, min: 0, max: DateTime.now().year),
           onChanged: (_) => _markChanged(),
         ),
       ],

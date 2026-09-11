@@ -1,9 +1,10 @@
 import '../models/genre.dart';
 import '../models/genre_query.dart';
 import '../models/page_result.dart';
+import 'package:dio/dio.dart';
 
 abstract class GenreRepository {
-  Future<PageResult<Genre>> find(GenreQuery query);
+  Future<PageResult<Genre>> find(GenreQuery query, {CancelToken? cancelToken});
 
   Future<Genre?> findById(int id);
 

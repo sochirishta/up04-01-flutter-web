@@ -9,22 +9,16 @@ import '../state/book_list_notifier.dart';
 class BookDetailScreen extends StatelessWidget {
   final int id;
 
-  const BookDetailScreen({
-    super.key,
-    required this.id,
-  });
+  const BookDetailScreen({super.key, required this.id});
 
-  Future<void> _deleteBook(
-      BuildContext context,
-      Book book,
-      ) async {
+  Future<void> _deleteBook(BuildContext context, Book book) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Удалить книгу?'),
         content: Text(
           'Вы действительно хотите удалить книгу '
-              '«${book.title}»?',
+          '«${book.title}»?',
         ),
         actions: [
           TextButton(
@@ -54,10 +48,7 @@ class BookDetailScreen extends StatelessWidget {
     context.go('/books');
   }
 
-  Future<void> _restoreBook(
-      BuildContext context,
-      Book book,
-      ) async {
+  Future<void> _restoreBook(BuildContext context, Book book) async {
     await context.read<BookListNotifier>().restoreItem(book.id);
 
     if (!context.mounted) return;
@@ -65,17 +56,14 @@ class BookDetailScreen extends StatelessWidget {
     context.go('/books');
   }
 
-  Future<void> _hardDeleteBook(
-      BuildContext context,
-      Book book,
-      ) async {
+  Future<void> _hardDeleteBook(BuildContext context, Book book) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Удалить книгу окончательно?'),
         content: Text(
           'Книга «${book.title}» будет удалена без возможности '
-              'восстановления.',
+          'восстановления.',
         ),
         actions: [
           TextButton(
@@ -98,9 +86,7 @@ class BookDetailScreen extends StatelessWidget {
       return;
     }
 
-    await context
-        .read<BookListNotifier>()
-        .hardDeleteItem(book.id);
+    await context.read<BookListNotifier>().hardDeleteItem(book.id);
 
     if (!context.mounted) return;
 
@@ -125,27 +111,18 @@ class BookDetailScreen extends StatelessWidget {
       body: FutureBuilder<Book?>(
         future: context.read<BookRepository>().findById(id),
         builder: (context, snapshot) {
-          if (snapshot.connectionState ==
-              ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
-            return Center(
-              child: Text(
-                'Ошибка загрузки: ${snapshot.error}',
-              ),
-            );
+            return Center(child: Text('Ошибка загрузки: ${snapshot.error}'));
           }
 
           final book = snapshot.data;
 
           if (book == null) {
-            return const Center(
-              child: Text('Книга не найдена'),
-            );
+            return const Center(child: Text('Книга не найдена'));
           }
 
           return _BookCard(
@@ -200,9 +177,7 @@ class _BookCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       book.title,
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineMedium,
+                      style: Theme.of(context).textTheme.headlineMedium,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -230,9 +205,7 @@ class _BookCard extends StatelessWidget {
                         IconButton(
                           tooltip: 'Удалить окончательно',
                           onPressed: onHardDelete,
-                          icon: const Icon(
-                            Icons.delete_forever,
-                          ),
+                          icon: const Icon(Icons.delete_forever),
                         ),
                     ],
                   ),
@@ -241,38 +214,17 @@ class _BookCard extends StatelessWidget {
 
               const SizedBox(height: 24),
 
-              _InfoRow(
-                label: 'ISBN',
-                value: book.isbn,
-              ),
-              _InfoRow(
-                label: 'Год издания',
-                value: '${book.year}',
-              ),
-              _InfoRow(
-                label: 'Количество страниц',
-                value: '${book.pages}',
-              ),
-              _InfoRow(
-                label: 'Издатель',
-                value: '${book.publisherId}',
-              ),
+              _InfoRow(label: 'ISBN', value: book.isbn),
+              _InfoRow(label: 'Год издания', value: '${book.year}'),
+              _InfoRow(label: 'Количество страниц', value: '${book.pages}'),
+              _InfoRow(label: 'Издатель', value: '${book.publisherId}'),
               _InfoRow(
                 label: 'Всего экземпляров',
                 value: '${book.copiesTotal}',
               ),
-              _InfoRow(
-                label: 'Доступно',
-                value: '${book.copiesAvailable}',
-              ),
-              _InfoRow(
-                label: 'ID авторов',
-                value: book.authorIds.join(', '),
-              ),
-              _InfoRow(
-                label: 'ID жанров',
-                value: book.genreIds.join(', '),
-              ),
+              _InfoRow(label: 'Доступно', value: '${book.copiesAvailable}'),
+              _InfoRow(label: 'ID авторов', value: book.authorIds.join(', ')),
+              _InfoRow(label: 'ID жанров', value: book.genreIds.join(', ')),
 
               if (book.isDeleted)
                 const Padding(
@@ -297,10 +249,7 @@ class _InfoRow extends StatelessWidget {
   final String label;
   final String value;
 
-  const _InfoRow({
-    required this.label,
-    required this.value,
-  });
+  const _InfoRow({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -313,14 +262,10 @@ class _InfoRow extends StatelessWidget {
             width: 190,
             child: Text(
               label,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
-          Expanded(
-            child: Text(value),
-          ),
+          Expanded(child: Text(value)),
         ],
       ),
     );

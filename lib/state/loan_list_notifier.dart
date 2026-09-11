@@ -7,12 +7,7 @@ import '../models/loan_query.dart';
 import '../models/page_result.dart';
 import '../repositories/loan_repository.dart';
 
-enum LoanLoadStatus {
-  idle,
-  loading,
-  success,
-  error,
-}
+enum LoanLoadStatus { idle, loading, success, error }
 
 class LoanListNotifier extends ChangeNotifier {
   LoanListNotifier(this._repository);
@@ -56,28 +51,15 @@ class LoanListNotifier extends ChangeNotifier {
   void search(String value) {
     _searchDebounce?.cancel();
 
-    _searchDebounce = Timer(
-      const Duration(milliseconds: 350),
-          () {
-        applyQuery(
-          query.copyWith(
-            search: value.trim(),
-            page: 1,
-          ),
-        );
-      },
-    );
+    _searchDebounce = Timer(const Duration(milliseconds: 350), () {
+      applyQuery(query.copyWith(search: value.trim(), page: 1));
+    });
   }
 
   Future<void> clearSearch() {
     _searchDebounce?.cancel();
 
-    return applyQuery(
-      query.copyWith(
-        search: '',
-        page: 1,
-      ),
-    );
+    return applyQuery(query.copyWith(search: '', page: 1));
   }
 
   Future<void> applyQuery(LoanQuery value) async {
@@ -91,18 +73,14 @@ class LoanListNotifier extends ChangeNotifier {
     return applyQuery(
       query.copyWith(
         sortField: field,
-        sortAscending: sameField
-            ? !query.sortAscending
-            : true,
+        sortAscending: sameField ? !query.sortAscending : true,
         page: 1,
       ),
     );
   }
 
   Future<void> firstPage() {
-    return applyQuery(
-      query.copyWith(page: 1),
-    );
+    return applyQuery(query.copyWith(page: 1));
   }
 
   Future<void> previousPage() {
@@ -110,11 +88,7 @@ class LoanListNotifier extends ChangeNotifier {
       return Future.value();
     }
 
-    return applyQuery(
-      query.copyWith(
-        page: query.page - 1,
-      ),
-    );
+    return applyQuery(query.copyWith(page: query.page - 1));
   }
 
   Future<void> nextPage() {
@@ -122,55 +96,27 @@ class LoanListNotifier extends ChangeNotifier {
       return Future.value();
     }
 
-    return applyQuery(
-      query.copyWith(
-        page: query.page + 1,
-      ),
-    );
+    return applyQuery(query.copyWith(page: query.page + 1));
   }
 
   Future<void> lastPage() {
-    return applyQuery(
-      query.copyWith(
-        page: result.totalPages,
-      ),
-    );
+    return applyQuery(query.copyWith(page: result.totalPages));
   }
 
   Future<void> changePageSize(int size) {
-    return applyQuery(
-      query.copyWith(
-        page: 1,
-        size: size,
-      ),
-    );
+    return applyQuery(query.copyWith(page: 1, size: size));
   }
 
   Future<void> setStatus(String? status) {
-    return applyQuery(
-      query.copyWith(
-        status: status,
-        page: 1,
-      ),
-    );
+    return applyQuery(query.copyWith(status: status, page: 1));
   }
 
   Future<void> setReader(int? readerId) {
-    return applyQuery(
-      query.copyWith(
-        readerId: readerId,
-        page: 1,
-      ),
-    );
+    return applyQuery(query.copyWith(readerId: readerId, page: 1));
   }
 
   Future<void> setBook(int? bookId) {
-    return applyQuery(
-      query.copyWith(
-        bookId: bookId,
-        page: 1,
-      ),
-    );
+    return applyQuery(query.copyWith(bookId: bookId, page: 1));
   }
 
   Future<void> createLoan(Loan loan) async {

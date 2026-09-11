@@ -60,18 +60,9 @@ class PaginationControls extends StatelessWidget {
           DropdownButton<int>(
             value: pageSize,
             items: const [
-              DropdownMenuItem(
-                value: 10,
-                child: Text('10'),
-              ),
-              DropdownMenuItem(
-                value: 25,
-                child: Text('25'),
-              ),
-              DropdownMenuItem(
-                value: 50,
-                child: Text('50'),
-              ),
+              DropdownMenuItem(value: 10, child: Text('10')),
+              DropdownMenuItem(value: 25, child: Text('25')),
+              DropdownMenuItem(value: 50, child: Text('50')),
             ],
             onChanged: (value) {
               if (value != null) {

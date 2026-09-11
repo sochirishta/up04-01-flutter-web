@@ -4,7 +4,7 @@ class LibraryCard {
   final DateTime issuedAt;
   final DateTime expiresAt;
 
-  const LibraryCard ({
+  const LibraryCard({
     required this.id,
     required this.number,
     required this.issuedAt,
@@ -24,14 +24,12 @@ class LibraryCard {
     return LibraryCard(
       id: json['id'] as int? ?? 0,
       number: json['number'] as String? ?? '',
-      issuedAt: DateTime.tryParse(
-        json['issuedAt'] as String? ?? '',
-      ) ??
-        DateTime.fromMillisecondsSinceEpoch(0),
-      expiresAt: DateTime.tryParse(
-        json['expiresAt'] as String? ?? '',
-      ) ??
-        DateTime.fromMillisecondsSinceEpoch(0),
+      issuedAt:
+          DateTime.tryParse(json['issuedAt'] as String? ?? '') ??
+          DateTime.fromMillisecondsSinceEpoch(0),
+      expiresAt:
+          DateTime.tryParse(json['expiresAt'] as String? ?? '') ??
+          DateTime.fromMillisecondsSinceEpoch(0),
     );
   }
 
@@ -39,12 +37,12 @@ class LibraryCard {
     String? number,
     DateTime? issuedAt,
     DateTime? expiresAt,
-}) {
+  }) {
     return LibraryCard(
-        id: id,
-        number: number ?? this.number,
-        issuedAt: issuedAt ?? this.issuedAt,
-        expiresAt: expiresAt ?? this.expiresAt
+      id: id,
+      number: number ?? this.number,
+      issuedAt: issuedAt ?? this.issuedAt,
+      expiresAt: expiresAt ?? this.expiresAt,
     );
   }
 }

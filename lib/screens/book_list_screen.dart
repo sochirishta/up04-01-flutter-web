@@ -4,21 +4,16 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../models/author.dart';
-import '../models/author_query.dart';
 import '../models/book.dart';
 import '../models/book_query.dart';
 import '../models/genre.dart';
-import '../models/genre_query.dart';
 import '../models/publisher.dart';
-import '../models/publisher_query.dart';
 
-import '../repositories/author_repository.dart';
 import '../repositories/book_repository.dart';
-import '../repositories/genre_repository.dart';
-import '../repositories/publisher_repository.dart';
 
 import '../state/book_list_notifier.dart';
 import '../state/entity_list_notifier.dart';
+import '../state/reference_cache.dart';
 
 import '../widgets/app_navigation_drawer.dart';
 import '../widgets/book_card.dart';
@@ -28,10 +23,7 @@ import '../widgets/pagination_controls.dart';
 class BookListScreen extends StatefulWidget {
   final BookQuery initialQuery;
 
-  const BookListScreen({
-    super.key,
-    required this.initialQuery,
-  });
+  const BookListScreen({super.key, required this.initialQuery});
 
   @override
   State<BookListScreen> createState() => _BookListScreenState();
@@ -42,167 +34,130 @@ class _BookListScreenState extends State<BookListScreen> {
   final _yearFromController = TextEditingController();
   final _yearToController = TextEditingController();
 
-  List<Author> _authors = [];
-  List<Genre> _genres = [];
-  List<Publisher> _publishers = [];
-  List<Book> _allBooks = [];
+  late final BookListNotifier _notifier;
+  late final ReferenceCache _referenceCache;
+  late final BookRepository _bookRepository;
 
-  bool _loadingReferences = true;
+  List<Book> _allBooks = [];
 
   @override
   void initState() {
     super.initState();
 
-    final notifier = context.read<BookListNotifier>();
-
-    notifier.addListener(_updateUrl);
-    notifier.setQuery(widget.initialQuery);
+    _notifier = context.read<BookListNotifier>();
+    _referenceCache = context.read<ReferenceCache>();
+    _bookRepository = context.read<BookRepository>();
 
     _searchController.text = widget.initialQuery.search;
-    _yearFromController.text =
-        widget.initialQuery.yearFrom?.toString() ?? '';
-    _yearToController.text =
-        widget.initialQuery.yearTo?.toString() ?? '';
+    _yearFromController.text = widget.initialQuery.yearFrom?.toString() ?? '';
+    _yearToController.text = widget.initialQuery.yearTo?.toString() ?? '';
 
-    _loadReferences();
+    _notifier.addListener(_updateUrl);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      _notifier.setQuery(widget.initialQuery);
+      _referenceCache.load();
+      _loadAllBooks();
+    });
   }
 
-  Future<void> _loadReferences() async {
-    final authorRepository = context.read<AuthorRepository>();
-    final genreRepository = context.read<GenreRepository>();
-    final publisherRepository =
-    context.read<PublisherRepository>();
-    final bookRepository = context.read<BookRepository>();
-
+  Future<void> _loadAllBooks() async {
     try {
-      final authorsResult = await authorRepository.find(
-        const AuthorQuery(size: 1000),
-      );
-
-      final genresResult = await genreRepository.find(
-        const GenreQuery(size: 1000),
-      );
-
-      final publishersResult = await publisherRepository.find(
-        const PublisherQuery(size: 1000),
-      );
-
-      final booksResult = await bookRepository.find(
-        const BookQuery(
-          size: 10000,
-          includeDeleted: true,
-        ),
+      final booksResult = await _bookRepository.find(
+        const BookQuery(size: 10000, includeDeleted: true),
       );
 
       if (!mounted) return;
 
       setState(() {
-        _authors = authorsResult.items;
-        _genres = genresResult.items;
-        _publishers = publishersResult.items;
         _allBooks = booksResult.items;
-        _loadingReferences = false;
       });
     } catch (_) {
-      if (!mounted) return;
-
-      setState(() {
-        _loadingReferences = false;
-      });
+      // Основная загрузка списка книг
+      // обрабатывается через BookListNotifier.
     }
   }
 
   List<Author> get _filteredAuthors {
-    final query = context.read<BookListNotifier>().query;
+    final query = _notifier.query;
+    final authors = _referenceCache.authors;
 
     final books = _allBooks.where((book) {
-      if (query.publisherId != null &&
-          book.publisherId != query.publisherId) {
+      if (query.publisherId != null && book.publisherId != query.publisherId) {
         return false;
       }
 
-      if (query.genreId != null &&
-          !book.genreIds.contains(query.genreId)) {
+      if (query.genreId != null && !book.genreIds.contains(query.genreId)) {
         return false;
       }
 
       return true;
     });
 
-    final authorIds = books
-        .expand((book) => book.authorIds)
-        .toSet();
+    final authorIds = books.expand((book) => book.authorIds).toSet();
 
-    return _authors
-        .where((author) => authorIds.contains(author.id))
-        .toList();
+    return authors.where((author) => authorIds.contains(author.id)).toList();
   }
 
   List<Genre> get _filteredGenres {
-    final query = context.read<BookListNotifier>().query;
+    final query = _notifier.query;
+    final genres = _referenceCache.genres;
 
     final books = _allBooks.where((book) {
-      if (query.publisherId != null &&
-          book.publisherId != query.publisherId) {
+      if (query.publisherId != null && book.publisherId != query.publisherId) {
         return false;
       }
 
-      if (query.authorId != null &&
-          !book.authorIds.contains(query.authorId)) {
+      if (query.authorId != null && !book.authorIds.contains(query.authorId)) {
         return false;
       }
 
       return true;
     });
 
-    final genreIds = books
-        .expand((book) => book.genreIds)
-        .toSet();
+    final genreIds = books.expand((book) => book.genreIds).toSet();
 
-    return _genres
-        .where((genre) => genreIds.contains(genre.id))
-        .toList();
+    return genres.where((genre) => genreIds.contains(genre.id)).toList();
   }
 
   List<Publisher> get _filteredPublishers {
-    final query = context.read<BookListNotifier>().query;
+    final query = _notifier.query;
+    final publishers = _referenceCache.publishers;
 
     final books = _allBooks.where((book) {
-      if (query.authorId != null &&
-          !book.authorIds.contains(query.authorId)) {
+      if (query.authorId != null && !book.authorIds.contains(query.authorId)) {
         return false;
       }
 
-      if (query.genreId != null &&
-          !book.genreIds.contains(query.genreId)) {
+      if (query.genreId != null && !book.genreIds.contains(query.genreId)) {
         return false;
       }
 
       return true;
     });
 
-    final publisherIds = books
-        .map((book) => book.publisherId)
-        .toSet();
+    final publisherIds = books.map((book) => book.publisherId).toSet();
 
-    return _publishers
-        .where(
-          (publisher) => publisherIds.contains(publisher.id),
-    )
+    return publishers
+        .where((publisher) => publisherIds.contains(publisher.id))
         .toList();
   }
 
   String _authorNames(Book book) {
+    final authors = _referenceCache.authors;
+
     final names = book.authorIds
         .map((id) {
-      for (final author in _authors) {
-        if (author.id == id) {
-          return author.fullName;
-        }
-      }
+          for (final author in authors) {
+            if (author.id == id) {
+              return author.fullName;
+            }
+          }
 
-      return null;
-    })
+          return null;
+        })
         .whereType<String>()
         .toList();
 
@@ -210,16 +165,18 @@ class _BookListScreenState extends State<BookListScreen> {
   }
 
   String _genreNames(Book book) {
+    final genres = _referenceCache.genres;
+
     final names = book.genreIds
         .map((id) {
-      for (final genre in _genres) {
-        if (genre.id == id) {
-          return genre.name;
-        }
-      }
+          for (final genre in genres) {
+            if (genre.id == id) {
+              return genre.name;
+            }
+          }
 
-      return null;
-    })
+          return null;
+        })
         .whereType<String>()
         .toList();
 
@@ -227,7 +184,9 @@ class _BookListScreenState extends State<BookListScreen> {
   }
 
   String _publisherName(Book book) {
-    for (final publisher in _publishers) {
+    final publishers = _referenceCache.publishers;
+
+    for (final publisher in publishers) {
       if (publisher.id == book.publisherId) {
         return publisher.name;
       }
@@ -239,19 +198,15 @@ class _BookListScreenState extends State<BookListScreen> {
   void _updateUrl() {
     if (!mounted) return;
 
-    final notifier = context.read<BookListNotifier>();
-    final newLocation = notifier.urlFor(notifier.query);
+    final newLocation = _notifier.urlFor(_notifier.query);
 
-    if (GoRouterState.of(context).uri.toString() !=
-        newLocation) {
+    if (GoRouterState.of(context).uri.toString() != newLocation) {
       context.go(newLocation);
     }
   }
 
   Future<void> _deleteSelected() async {
-    final notifier = context.read<BookListNotifier>();
-
-    if (!notifier.hasSelection) return;
+    if (!_notifier.hasSelection) return;
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -259,7 +214,7 @@ class _BookListScreenState extends State<BookListScreen> {
         title: const Text('Удалить книги?'),
         content: Text(
           'Вы действительно хотите удалить '
-              '${notifier.selected.length} выбранных книг?',
+          '${_notifier.selected.length} выбранных книг?',
         ),
         actions: [
           TextButton(
@@ -279,15 +234,13 @@ class _BookListScreenState extends State<BookListScreen> {
     );
 
     if (confirmed == true) {
-      await notifier.deleteSelected();
+      await _notifier.deleteSelected();
     }
   }
 
   @override
   void dispose() {
-    context
-        .read<BookListNotifier>()
-        .removeListener(_updateUrl);
+    _notifier.removeListener(_updateUrl);
 
     _searchController.dispose();
     _yearFromController.dispose();
@@ -299,23 +252,31 @@ class _BookListScreenState extends State<BookListScreen> {
   @override
   Widget build(BuildContext context) {
     final notifier = context.watch<BookListNotifier>();
+    final references = context.watch<ReferenceCache>();
+
     final result = notifier.result;
     final query = notifier.query;
 
-    if (notifier.status == LoadStatus.loading ||
-        _loadingReferences) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+    if (notifier.status == LoadStatus.loading || references.loading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (notifier.status == LoadStatus.error) {
       return Scaffold(
         body: Center(
-          child: Text(
-            notifier.errorMessage ?? 'Ошибка загрузки',
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                notifier.errorMessage ?? 'Ошибка загрузки',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: notifier.load,
+                child: const Text('Повторить'),
+              ),
+            ],
           ),
         ),
       );
@@ -333,18 +294,11 @@ class _BookListScreenState extends State<BookListScreen> {
           ),
         ],
       ),
-      drawer: const AppNavigationDrawer(
-        currentRoute: '/books',
-      ),
+      drawer: const AppNavigationDrawer(currentRoute: '/books'),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text(
-            'Книги',
-            style: Theme.of(context)
-                .textTheme
-                .headlineMedium,
-          ),
+          Text('Книги', style: Theme.of(context).textTheme.headlineMedium),
 
           const SizedBox(height: 16),
 
@@ -357,12 +311,12 @@ class _BookListScreenState extends State<BookListScreen> {
               suffixIcon: query.search.isEmpty
                   ? null
                   : IconButton(
-                onPressed: () {
-                  _searchController.clear();
-                  notifier.clearSearch();
-                },
-                icon: const Icon(Icons.clear),
-              ),
+                      onPressed: () {
+                        _searchController.clear();
+                        notifier.clearSearch();
+                      },
+                      icon: const Icon(Icons.clear),
+                    ),
               border: const OutlineInputBorder(),
             ),
             onChanged: notifier.search,
@@ -464,17 +418,13 @@ class _BookListScreenState extends State<BookListScreen> {
                 child: TextField(
                   controller: _yearFromController,
                   keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                  ],
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: const InputDecoration(
                     labelText: 'Год от',
                     border: OutlineInputBorder(),
                   ),
                   onSubmitted: (value) {
-                    notifier.setYearFrom(
-                      int.tryParse(value),
-                    );
+                    notifier.setYearFrom(int.tryParse(value));
                   },
                 ),
               ),
@@ -484,17 +434,13 @@ class _BookListScreenState extends State<BookListScreen> {
                 child: TextField(
                   controller: _yearToController,
                   keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                  ],
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: const InputDecoration(
                     labelText: 'Год до',
                     border: OutlineInputBorder(),
                   ),
                   onSubmitted: (value) {
-                    notifier.setYearTo(
-                      int.tryParse(value),
-                    );
+                    notifier.setYearTo(int.tryParse(value));
                   },
                 ),
               ),
@@ -530,16 +476,12 @@ class _BookListScreenState extends State<BookListScreen> {
             runSpacing: 8,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Text(
-                'Найдено: ${result.total}',
-              ),
+              Text('Найдено: ${result.total}'),
               if (notifier.hasSelection)
                 FilledButton.icon(
                   onPressed: _deleteSelected,
                   icon: const Icon(Icons.delete),
-                  label: Text(
-                    'Удалить (${notifier.selected.length})',
-                  ),
+                  label: Text('Удалить (${notifier.selected.length})'),
                 ),
             ],
           ),
@@ -561,36 +503,25 @@ class _BookListScreenState extends State<BookListScreen> {
                     children: result.items
                         .map(
                           (book) => BookCard(
-                        book: book,
-                        selected: notifier.selected
-                            .contains(book.id),
-                        onSelectionChanged: () {
-                          notifier.toggleSelection(
-                            book.id,
-                          );
-                        },
-                        onOpen: () {
-                          context.go(
-                            '/books/${book.id}',
-                          );
-                        },
-                        onEdit: () {
-                          context.go(
-                            '/books/${book.id}/edit',
-                          );
-                        },
-                        onRestore: book.isDeleted
-                            ? () => notifier.restoreItem(
-                          book.id,
+                            book: book,
+                            selected: notifier.selected.contains(book.id),
+                            onSelectionChanged: () {
+                              notifier.toggleSelection(book.id);
+                            },
+                            onOpen: () {
+                              context.go('/books/${book.id}');
+                            },
+                            onEdit: () {
+                              context.go('/books/${book.id}/edit');
+                            },
+                            onRestore: book.isDeleted
+                                ? () => notifier.restoreItem(book.id)
+                                : null,
+                            onHardDelete: book.isDeleted
+                                ? () => notifier.hardDeleteItem(book.id)
+                                : null,
+                          ),
                         )
-                            : null,
-                        onHardDelete: book.isDeleted
-                            ? () => notifier.hardDeleteItem(
-                          book.id,
-                        )
-                            : null,
-                      ),
-                    )
                         .toList(),
                   );
                 }
@@ -618,41 +549,31 @@ class _BookListScreenState extends State<BookListScreen> {
                       label: 'Год',
                       sortField: 'year',
                       numeric: true,
-                      build: (book) => Text(
-                        '${book.year}',
-                      ),
+                      build: (book) => Text('${book.year}'),
                     ),
                     TableColumnSpec<Book>(
                       label: 'Страницы',
                       sortField: 'pages',
                       numeric: true,
-                      build: (book) => Text(
-                        '${book.pages}',
-                      ),
+                      build: (book) => Text('${book.pages}'),
                     ),
                     TableColumnSpec<Book>(
                       label: 'Авторы',
-                      build: (book) => Text(
-                        _authorNames(book),
-                      ),
+                      build: (book) => Text(_authorNames(book)),
                     ),
                     TableColumnSpec<Book>(
                       label: 'Жанры',
-                      build: (book) => Text(
-                        _genreNames(book),
-                      ),
+                      build: (book) => Text(_genreNames(book)),
                     ),
                     TableColumnSpec<Book>(
                       label: 'Издательство',
-                      build: (book) => Text(
-                        _publisherName(book),
-                      ),
+                      build: (book) => Text(_publisherName(book)),
                     ),
                     TableColumnSpec<Book>(
                       label: 'Экземпляры',
                       build: (book) => Text(
                         '${book.copiesAvailable}/'
-                            '${book.copiesTotal}',
+                        '${book.copiesTotal}',
                       ),
                     ),
                   ],
@@ -660,20 +581,14 @@ class _BookListScreenState extends State<BookListScreen> {
                     IconButton(
                       tooltip: 'Открыть',
                       onPressed: () {
-                        context.go(
-                          '/books/${book.id}',
-                        );
+                        context.go('/books/${book.id}');
                       },
-                      icon: const Icon(
-                        Icons.open_in_new,
-                      ),
+                      icon: const Icon(Icons.open_in_new),
                     ),
                     IconButton(
                       tooltip: 'Редактировать',
                       onPressed: () {
-                        context.go(
-                          '/books/${book.id}/edit',
-                        );
+                        context.go('/books/${book.id}/edit');
                       },
                       icon: const Icon(Icons.edit),
                     ),
@@ -681,25 +596,17 @@ class _BookListScreenState extends State<BookListScreen> {
                       IconButton(
                         tooltip: 'Восстановить',
                         onPressed: () {
-                          notifier.restoreItem(
-                            book.id,
-                          );
+                          notifier.restoreItem(book.id);
                         },
-                        icon: const Icon(
-                          Icons.restore,
-                        ),
+                        icon: const Icon(Icons.restore),
                       ),
                     if (book.isDeleted)
                       IconButton(
                         tooltip: 'Удалить окончательно',
                         onPressed: () {
-                          notifier.hardDeleteItem(
-                            book.id,
-                          );
+                          notifier.hardDeleteItem(book.id);
                         },
-                        icon: const Icon(
-                          Icons.delete_forever,
-                        ),
+                        icon: const Icon(Icons.delete_forever),
                       ),
                   ],
                 );

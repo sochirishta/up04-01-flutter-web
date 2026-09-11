@@ -110,7 +110,7 @@ final appRouter = GoRouter(
                 ? sortParts[0]
                 : 'name',
             sortAscending:
-            sortParts == null ||
+                sortParts == null ||
                 sortParts.length < 2 ||
                 sortParts[1] != 'desc',
             page: int.tryParse(p['page'] ?? '') ?? 1,
@@ -128,18 +128,14 @@ final appRouter = GoRouter(
       path: '/genres/:id/edit',
       builder: (context, state) {
         return GenreFormScreen(
-          id: int.tryParse(
-            state.pathParameters['id'] ?? '',
-          ),
+          id: int.tryParse(state.pathParameters['id'] ?? ''),
         );
       },
     ),
     GoRoute(
       path: '/genres/:id',
       builder: (context, state) {
-        final id = int.parse(
-          state.pathParameters['id']!,
-        );
+        final id = int.parse(state.pathParameters['id']!);
 
         return GenreDetailScreen(id: id);
       },
@@ -168,56 +164,38 @@ final appRouter = GoRouter(
         return PublisherListScreen(
           initialQuery: PublisherQuery(
             search: p['search'] ?? '',
-            sortField:
-            sortParts != null &&
-                sortParts.isNotEmpty
+            sortField: sortParts != null && sortParts.isNotEmpty
                 ? sortParts[0]
                 : 'name',
             sortAscending:
-            sortParts == null ||
+                sortParts == null ||
                 sortParts.length < 2 ||
                 sortParts[1] != 'desc',
-            page:
-            int.tryParse(
-              p['page'] ?? '',
-            ) ??
-                1,
-            size:
-            int.tryParse(
-              p['size'] ?? '',
-            ) ??
-                10,
-            includeDeleted:
-            p['deleted'] == 'true',
+            page: int.tryParse(p['page'] ?? '') ?? 1,
+            size: int.tryParse(p['size'] ?? '') ?? 10,
+            includeDeleted: p['deleted'] == 'true',
           ),
         );
       },
     ),
     GoRoute(
       path: '/publishers/new',
-      builder: (context, state) =>
-      const PublisherFormScreen(),
+      builder: (context, state) => const PublisherFormScreen(),
     ),
     GoRoute(
       path: '/publishers/:id/edit',
       builder: (context, state) {
         return PublisherFormScreen(
-          id: int.tryParse(
-            state.pathParameters['id'] ?? '',
-          ),
+          id: int.tryParse(state.pathParameters['id'] ?? ''),
         );
       },
     ),
     GoRoute(
       path: '/publishers/:id',
       builder: (context, state) {
-        final id = int.parse(
-          state.pathParameters['id']!,
-        );
+        final id = int.parse(state.pathParameters['id']!);
 
-        return PublisherDetailScreen(
-          id: id,
-        );
+        return PublisherDetailScreen(id: id);
       },
     ),
     GoRoute(
@@ -228,47 +206,33 @@ final appRouter = GoRouter(
         return ReaderListScreen(
           initialQuery: ReaderQuery(
             search: p['search'] ?? '',
-            sortField:
-            sortParts != null &&
-                sortParts.isNotEmpty
+            sortField: sortParts != null && sortParts.isNotEmpty
                 ? sortParts[0]
                 : 'fullName',
             sortAscending:
-            sortParts == null ||
+                sortParts == null ||
                 sortParts.length < 2 ||
                 sortParts[1] != 'desc',
-            page:
-            int.tryParse(p['page'] ?? '') ?? 1,
-            size:
-            int.tryParse(p['size'] ?? '') ?? 10,
-            includeDeleted:
-            p['deleted'] == 'true',
+            page: int.tryParse(p['page'] ?? '') ?? 1,
+            size: int.tryParse(p['size'] ?? '') ?? 10,
+            includeDeleted: p['deleted'] == 'true',
           ),
         );
       },
     ),
     GoRoute(
       path: '/readers/new',
-      builder: (context, state) =>
-      const ReaderFormScreen(),
+      builder: (context, state) => const ReaderFormScreen(),
     ),
     GoRoute(
       path: '/readers/:id/edit',
       builder: (context, state) =>
-          ReaderFormScreen(
-            id: int.tryParse(
-              state.pathParameters['id'] ?? '',
-            ),
-          ),
+          ReaderFormScreen(id: int.tryParse(state.pathParameters['id'] ?? '')),
     ),
     GoRoute(
       path: '/readers/:id',
       builder: (context, state) =>
-          ReaderDetailScreen(
-            id: int.parse(
-              state.pathParameters['id']!,
-            ),
-          ),
+          ReaderDetailScreen(id: int.parse(state.pathParameters['id']!)),
     ),
     GoRoute(
       path: '/loans',
@@ -279,49 +243,34 @@ final appRouter = GoRouter(
           initialQuery: LoanQuery(
             search: p['search'] ?? '',
             status: p['status'],
-            readerId:
-            int.tryParse(p['readerId'] ?? ''),
-            bookId:
-            int.tryParse(p['bookId'] ?? ''),
-            sortField:
-            sortParts != null &&
-                sortParts.isNotEmpty
+            readerId: int.tryParse(p['readerId'] ?? ''),
+            bookId: int.tryParse(p['bookId'] ?? ''),
+            sortField: sortParts != null && sortParts.isNotEmpty
                 ? sortParts[0]
                 : 'issuedAt',
             sortAscending:
-            sortParts != null &&
+                sortParts != null &&
                 sortParts.length > 1 &&
                 sortParts[1] == 'asc',
-            page:
-            int.tryParse(p['page'] ?? '') ?? 1,
-            size:
-            int.tryParse(p['size'] ?? '') ?? 10,
+            page: int.tryParse(p['page'] ?? '') ?? 1,
+            size: int.tryParse(p['size'] ?? '') ?? 10,
           ),
         );
       },
     ),
     GoRoute(
       path: '/loans/new',
-      builder: (context, state) =>
-      const LoanFormScreen(),
+      builder: (context, state) => const LoanFormScreen(),
     ),
     GoRoute(
       path: '/loans/:id/edit',
       builder: (context, state) =>
-          LoanFormScreen(
-            id: int.tryParse(
-              state.pathParameters['id'] ?? '',
-            ),
-          ),
+          LoanFormScreen(id: int.tryParse(state.pathParameters['id'] ?? '')),
     ),
     GoRoute(
       path: '/loans/:id',
       builder: (context, state) =>
-          LoanDetailScreen(
-            id: int.parse(
-              state.pathParameters['id']!,
-            ),
-          ),
+          LoanDetailScreen(id: int.parse(state.pathParameters['id']!)),
     ),
   ],
   errorBuilder: (context, state) {

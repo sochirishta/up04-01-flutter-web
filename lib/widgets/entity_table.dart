@@ -52,18 +52,12 @@ class EntityTable<T> extends StatelessWidget {
     ];
 
     if (actions != null) {
-      tableColumns.add(
-        const DataColumn(
-          label: Text('Действия'),
-        ),
-      );
+      tableColumns.add(const DataColumn(label: Text('Действия')));
     }
 
     final sortIndex = sortField == null
         ? -1
-        : columns.indexWhere(
-          (column) => column.sortField == sortField,
-    );
+        : columns.indexWhere((column) => column.sortField == sortField);
 
     return SingleChildScrollView(
       scrollDirection: Axis.vertical,
@@ -86,8 +80,7 @@ class EntityTable<T> extends StatelessWidget {
                       ? (_) => onToggleSelect!(idOf(item))
                       : null,
                   cells: [
-                    for (final column in columns)
-                      DataCell(column.build(item)),
+                    for (final column in columns) DataCell(column.build(item)),
                     if (actions != null)
                       DataCell(
                         Row(

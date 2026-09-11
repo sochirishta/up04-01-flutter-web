@@ -11,28 +11,21 @@ import '../widgets/form_field_definition.dart';
 class GenreFormScreen extends StatefulWidget {
   final int? id;
 
-  const GenreFormScreen({
-    super.key,
-    this.id,
-  });
+  const GenreFormScreen({super.key, this.id});
 
   bool get isEditing => id != null;
 
   @override
-  State<GenreFormScreen> createState() =>
-      _GenreFormScreenState();
+  State<GenreFormScreen> createState() => _GenreFormScreenState();
 }
 
-class _GenreFormScreenState
-    extends State<GenreFormScreen> {
+class _GenreFormScreenState extends State<GenreFormScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _hasUnsavedChanges = false;
 
-  final _nameController =
-  TextEditingController();
+  final _nameController = TextEditingController();
 
-  final _descriptionController =
-  TextEditingController();
+  final _descriptionController = TextEditingController();
 
   bool _isLoading = false;
   bool _isSaving = false;
@@ -58,11 +51,9 @@ class _GenreFormScreenState
       _isLoading = true;
     });
 
-    final repository =
-    context.read<GenreRepository>();
+    final repository = context.read<GenreRepository>();
 
-    final genre =
-    await repository.findById(widget.id!);
+    final genre = await repository.findById(widget.id!);
 
     if (!mounted) return;
 
@@ -72,8 +63,7 @@ class _GenreFormScreenState
     }
 
     _nameController.text = genre.name;
-    _descriptionController.text =
-        genre.description;
+    _descriptionController.text = genre.description;
 
     setState(() {
       _isLoading = false;
@@ -97,37 +87,26 @@ class _GenreFormScreenState
       _isSaving = true;
     });
 
-    final repository =
-    context.read<GenreRepository>();
+    final repository = context.read<GenreRepository>();
 
-    final name =
-    _nameController.text.trim();
+    final name = _nameController.text.trim();
 
-    final description =
-    _descriptionController.text.trim();
+    final description = _descriptionController.text.trim();
 
     try {
       if (widget.isEditing) {
-        final oldGenre =
-        await repository.findById(widget.id!);
+        final oldGenre = await repository.findById(widget.id!);
 
         if (oldGenre == null) {
           throw StateError('Жанр не найден');
         }
 
         await repository.update(
-          oldGenre.copyWith(
-            name: name,
-            description: description,
-          ),
+          oldGenre.copyWith(name: name, description: description),
         );
       } else {
         await repository.create(
-          Genre(
-            id: 0,
-            name: name,
-            description: description,
-          ),
+          Genre(id: 0, name: name, description: description),
         );
       }
 
@@ -137,11 +116,7 @@ class _GenreFormScreenState
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$e'),
-        ),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
     } finally {
       if (mounted) {
         setState(() {
@@ -155,9 +130,7 @@ class _GenreFormScreenState
   Widget build(BuildContext context) {
     return EntityForm(
       formKey: _formKey,
-      title: widget.isEditing
-          ? 'Редактирование жанра'
-          : 'Новый жанр',
+      title: widget.isEditing ? 'Редактирование жанра' : 'Новый жанр',
       isEditing: widget.isEditing,
       isLoading: _isLoading,
       isSaving: _isSaving,
@@ -169,8 +142,7 @@ class _GenreFormScreenState
           label: 'Название',
           type: FormFieldType.text,
           controller: _nameController,
-          validator: (value) =>
-              Validators.maxLength(value, 100),
+          validator: (value) => Validators.maxLength(value, 100),
           onChanged: (_) => _markChanged(),
         ),
 
@@ -179,8 +151,7 @@ class _GenreFormScreenState
           type: FormFieldType.text,
           controller: _descriptionController,
           maxLines: 5,
-          validator: (value) =>
-              Validators.maxLength(value, 500),
+          validator: (value) => Validators.maxLength(value, 500),
           onChanged: (_) => _markChanged(),
         ),
       ],

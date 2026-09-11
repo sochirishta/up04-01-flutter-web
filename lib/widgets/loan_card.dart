@@ -27,58 +27,36 @@ class LoanCard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Row(
-            crossAxisAlignment:
-            CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Checkbox(
-                value: selected,
-                onChanged: (_) =>
-                    onSelectionChanged(),
-              ),
+              Checkbox(value: selected, onChanged: (_) => onSelectionChanged()),
               const SizedBox(width: 8),
               Expanded(
                 child: Column(
-                  crossAxisAlignment:
-                  CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Выдача #${loan.id}',
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium,
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 6),
-                    Text(
-                      'Читатель: ${loan.readerId}',
-                    ),
-                    Text(
-                      'Книга: ${loan.bookId}',
-                    ),
-                    Text(
-                      'Выдана: ${_date(loan.issuedAt)}',
-                    ),
-                    Text(
-                      'Вернуть до: ${_date(loan.dueAt)}',
-                    ),
-                    Text(
-                      'Статус: ${loan.status}',
-                    ),
+                    Text('Читатель: ${loan.readerId}'),
+                    Text('Книга: ${loan.bookId}'),
+                    Text('Выдана: ${_date(loan.issuedAt)}'),
+                    Text('Вернуть до: ${_date(loan.dueAt)}'),
+                    Text('Статус: ${loan.status}'),
                     Wrap(
                       spacing: 4,
                       children: [
                         IconButton(
                           tooltip: 'Открыть',
                           onPressed: onOpen,
-                          icon: const Icon(
-                            Icons.open_in_new,
-                          ),
+                          icon: const Icon(Icons.open_in_new),
                         ),
                         IconButton(
                           tooltip: 'Редактировать',
                           onPressed: onEdit,
-                          icon: const Icon(
-                            Icons.edit,
-                          ),
+                          icon: const Icon(Icons.edit),
                         ),
                       ],
                     ),
@@ -93,10 +71,6 @@ class LoanCard extends StatelessWidget {
   }
 
   static String _date(DateTime value) {
-    return value
-        .toLocal()
-        .toString()
-        .split(' ')
-        .first;
+    return value.toLocal().toString().split(' ').first;
   }
 }

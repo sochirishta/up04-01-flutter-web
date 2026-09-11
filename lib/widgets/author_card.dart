@@ -47,9 +47,7 @@ class AuthorCard extends StatelessWidget {
                   children: [
                     Text(
                       author.fullName,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium,
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 6),
                     Text('Год рождения: ${author.birthYear}'),
@@ -60,9 +58,7 @@ class AuthorCard extends StatelessWidget {
                       Text(
                         'Удалён',
                         style: TextStyle(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .error,
+                          color: Theme.of(context).colorScheme.error,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -76,9 +72,7 @@ class AuthorCard extends StatelessWidget {
                         IconButton(
                           tooltip: 'Открыть',
                           onPressed: onOpen,
-                          icon: const Icon(
-                            Icons.open_in_new,
-                          ),
+                          icon: const Icon(Icons.open_in_new),
                         ),
                         IconButton(
                           tooltip: 'Редактировать',
@@ -89,16 +83,12 @@ class AuthorCard extends StatelessWidget {
                           IconButton(
                             tooltip: 'Восстановить',
                             onPressed: onRestore,
-                            icon: const Icon(
-                              Icons.restore,
-                            ),
+                            icon: const Icon(Icons.restore),
                           ),
                           IconButton(
                             tooltip: 'Удалить окончательно',
                             onPressed: onHardDelete,
-                            icon: const Icon(
-                              Icons.delete_forever,
-                            ),
+                            icon: const Icon(Icons.delete_forever),
                           ),
                         ],
                       ],

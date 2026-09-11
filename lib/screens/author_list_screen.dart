@@ -14,10 +14,7 @@ import '../widgets/app_navigation_drawer.dart';
 class AuthorListScreen extends StatefulWidget {
   final AuthorQuery initialQuery;
 
-  const AuthorListScreen({
-    super.key,
-    required this.initialQuery,
-  });
+  const AuthorListScreen({super.key, required this.initialQuery});
 
   @override
   State<AuthorListScreen> createState() => _AuthorListScreenState();
@@ -61,7 +58,7 @@ class _AuthorListScreenState extends State<AuthorListScreen> {
         title: const Text('Удалить авторов?'),
         content: Text(
           'Вы действительно хотите удалить '
-              '${notifier.selected.length} выбранных авторов?',
+          '${notifier.selected.length} выбранных авторов?',
         ),
         actions: [
           TextButton(
@@ -87,9 +84,7 @@ class _AuthorListScreenState extends State<AuthorListScreen> {
 
   @override
   void dispose() {
-    context
-        .read<AuthorListNotifier>()
-        .removeListener(_updateUrl);
+    context.read<AuthorListNotifier>().removeListener(_updateUrl);
 
     _searchController.dispose();
 
@@ -104,17 +99,11 @@ class _AuthorListScreenState extends State<AuthorListScreen> {
     final query = notifier.query;
 
     if (notifier.status == LoadStatus.loading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (notifier.status == LoadStatus.error) {
-      return Center(
-        child: Text(
-          notifier.errorMessage ?? 'Ошибка загрузки',
-        ),
-      );
+      return Center(child: Text(notifier.errorMessage ?? 'Ошибка загрузки'));
     }
 
     return Scaffold(
@@ -129,16 +118,11 @@ class _AuthorListScreenState extends State<AuthorListScreen> {
           ),
         ],
       ),
-      drawer: const AppNavigationDrawer(
-        currentRoute: '/authors',
-      ),
+      drawer: const AppNavigationDrawer(currentRoute: '/authors'),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text(
-            'Авторы',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
+          Text('Авторы', style: Theme.of(context).textTheme.headlineMedium),
 
           const SizedBox(height: 16),
 
@@ -150,12 +134,12 @@ class _AuthorListScreenState extends State<AuthorListScreen> {
               suffixIcon: query.search.isEmpty
                   ? null
                   : IconButton(
-                onPressed: () {
-                  _searchController.clear();
-                  notifier.clearSearch();
-                },
-                icon: const Icon(Icons.clear),
-              ),
+                      onPressed: () {
+                        _searchController.clear();
+                        notifier.clearSearch();
+                      },
+                      icon: const Icon(Icons.clear),
+                    ),
               border: const OutlineInputBorder(),
             ),
             onChanged: notifier.search,
@@ -168,9 +152,7 @@ class _AuthorListScreenState extends State<AuthorListScreen> {
             runSpacing: 8,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Text(
-                'Найдено: ${result.total}',
-              ),
+              Text('Найдено: ${result.total}'),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -185,9 +167,7 @@ class _AuthorListScreenState extends State<AuthorListScreen> {
                 FilledButton.icon(
                   onPressed: _deleteSelected,
                   icon: const Icon(Icons.delete),
-                  label: Text(
-                    'Удалить (${notifier.selected.length})',
-                  ),
+                  label: Text('Удалить (${notifier.selected.length})'),
                 ),
             ],
           ),
@@ -195,9 +175,7 @@ class _AuthorListScreenState extends State<AuthorListScreen> {
           const SizedBox(height: 16),
 
           if (result.items.isEmpty)
-            const Center(
-              child: Text('Авторы не найдены'),
-            )
+            const Center(child: Text('Авторы не найдены'))
           else
             LayoutBuilder(
               builder: (context, constraints) {
@@ -206,37 +184,25 @@ class _AuthorListScreenState extends State<AuthorListScreen> {
                     children: result.items
                         .map(
                           (author) => AuthorCard(
-                        author: author,
-                        selected: notifier.selected.contains(
-                          author.id,
-                        ),
-                        onSelectionChanged: () {
-                          notifier.toggleSelection(
-                            author.id,
-                          );
-                        },
-                        onOpen: () {
-                          context.go(
-                            '/authors/${author.id}',
-                          );
-                        },
-                        onEdit: () {
-                          context.go(
-                            '/authors/${author.id}/edit',
-                          );
-                        },
-                        onRestore: author.isDeleted
-                            ? () => notifier.restoreItem(
-                          author.id,
+                            author: author,
+                            selected: notifier.selected.contains(author.id),
+                            onSelectionChanged: () {
+                              notifier.toggleSelection(author.id);
+                            },
+                            onOpen: () {
+                              context.go('/authors/${author.id}');
+                            },
+                            onEdit: () {
+                              context.go('/authors/${author.id}/edit');
+                            },
+                            onRestore: author.isDeleted
+                                ? () => notifier.restoreItem(author.id)
+                                : null,
+                            onHardDelete: author.isDeleted
+                                ? () => notifier.hardDeleteItem(author.id)
+                                : null,
+                          ),
                         )
-                            : null,
-                        onHardDelete: author.isDeleted
-                            ? () => notifier.hardDeleteItem(
-                          author.id,
-                        )
-                            : null,
-                      ),
-                    )
                         .toList(),
                   );
                 }
@@ -253,43 +219,31 @@ class _AuthorListScreenState extends State<AuthorListScreen> {
                     TableColumnSpec<Author>(
                       label: 'ФИО',
                       sortField: 'fullName',
-                      build: (author) => Text(
-                        author.fullName,
-                      ),
+                      build: (author) => Text(author.fullName),
                     ),
                     TableColumnSpec<Author>(
                       label: 'Год рождения',
                       sortField: 'birthYear',
-                      build: (author) => Text(
-                        author.birthYear.toString(),
-                      ),
+                      build: (author) => Text(author.birthYear.toString()),
                     ),
                     TableColumnSpec<Author>(
                       label: 'Страна',
                       sortField: 'country',
-                      build: (author) => Text(
-                        author.country,
-                      ),
+                      build: (author) => Text(author.country),
                     ),
                   ],
                   actions: (author) => [
                     IconButton(
                       tooltip: 'Открыть',
                       onPressed: () {
-                        context.go(
-                          '/authors/${author.id}',
-                        );
+                        context.go('/authors/${author.id}');
                       },
-                      icon: const Icon(
-                        Icons.open_in_new,
-                      ),
+                      icon: const Icon(Icons.open_in_new),
                     ),
                     IconButton(
                       tooltip: 'Редактировать',
                       onPressed: () {
-                        context.go(
-                          '/authors/${author.id}/edit',
-                        );
+                        context.go('/authors/${author.id}/edit');
                       },
                       icon: const Icon(Icons.edit),
                     ),
@@ -297,9 +251,7 @@ class _AuthorListScreenState extends State<AuthorListScreen> {
                       IconButton(
                         tooltip: 'Восстановить',
                         onPressed: () {
-                          notifier.restoreItem(
-                            author.id,
-                          );
+                          notifier.restoreItem(author.id);
                         },
                         icon: const Icon(Icons.restore),
                       ),
@@ -307,13 +259,9 @@ class _AuthorListScreenState extends State<AuthorListScreen> {
                       IconButton(
                         tooltip: 'Удалить окончательно',
                         onPressed: () {
-                          notifier.hardDeleteItem(
-                            author.id,
-                          );
+                          notifier.hardDeleteItem(author.id);
                         },
-                        icon: const Icon(
-                          Icons.delete_forever,
-                        ),
+                        icon: const Icon(Icons.delete_forever),
                       ),
                   ],
                 );

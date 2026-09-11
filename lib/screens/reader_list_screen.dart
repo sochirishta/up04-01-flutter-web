@@ -14,10 +14,7 @@ import '../widgets/reader_card.dart';
 class ReaderListScreen extends StatefulWidget {
   final ReaderQuery initialQuery;
 
-  const ReaderListScreen({
-    super.key,
-    this.initialQuery = const ReaderQuery(),
-  });
+  const ReaderListScreen({super.key, this.initialQuery = const ReaderQuery()});
 
   @override
   State<ReaderListScreen> createState() => _ReaderListScreenState();
@@ -32,9 +29,7 @@ class _ReaderListScreenState extends State<ReaderListScreen> {
   void initState() {
     super.initState();
 
-    _searchController = TextEditingController(
-      text: widget.initialQuery.search,
-    );
+    _searchController = TextEditingController(text: widget.initialQuery.search);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -58,7 +53,7 @@ class _ReaderListScreenState extends State<ReaderListScreen> {
         title: const Text('Удалить читателей?'),
         content: Text(
           'Вы действительно хотите удалить '
-              '${notifier.selected.length} выбранных читателей?',
+          '${notifier.selected.length} выбранных читателей?',
         ),
         actions: [
           TextButton(
@@ -80,11 +75,7 @@ class _ReaderListScreenState extends State<ReaderListScreen> {
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$e'),
-        ),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
     }
   }
 
@@ -107,9 +98,7 @@ class _ReaderListScreenState extends State<ReaderListScreen> {
               ),
             ],
           ),
-          drawer: const AppNavigationDrawer(
-            currentRoute: '/readers',
-          ),
+          drawer: const AppNavigationDrawer(currentRoute: '/readers'),
           body: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -123,13 +112,13 @@ class _ReaderListScreenState extends State<ReaderListScreen> {
                     suffixIcon: _searchController.text.isEmpty
                         ? null
                         : IconButton(
-                      onPressed: () {
-                        _searchController.clear();
-                        notifier.clearSearch();
-                        setState(() {});
-                      },
-                      icon: const Icon(Icons.clear),
-                    ),
+                            onPressed: () {
+                              _searchController.clear();
+                              notifier.clearSearch();
+                              setState(() {});
+                            },
+                            icon: const Icon(Icons.clear),
+                          ),
                     border: const OutlineInputBorder(),
                   ),
                   onChanged: (value) {
@@ -158,9 +147,7 @@ class _ReaderListScreenState extends State<ReaderListScreen> {
                       FilledButton.icon(
                         onPressed: _deleteSelected,
                         icon: const Icon(Icons.delete),
-                        label: Text(
-                          'Удалить (${notifier.selected.length})',
-                        ),
+                        label: Text('Удалить (${notifier.selected.length})'),
                       ),
                     ],
                   ],
@@ -168,9 +155,7 @@ class _ReaderListScreenState extends State<ReaderListScreen> {
 
                 const SizedBox(height: 12),
 
-                Expanded(
-                  child: _buildContent(),
-                ),
+                Expanded(child: _buildContent()),
 
                 PaginationControls(
                   page: result.page,
@@ -194,25 +179,17 @@ class _ReaderListScreenState extends State<ReaderListScreen> {
 
   Widget _buildContent() {
     if (notifier.status == LoadStatus.loading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (notifier.status == LoadStatus.error) {
-      return Center(
-        child: Text(
-          notifier.errorMessage ?? 'Ошибка загрузки',
-        ),
-      );
+      return Center(child: Text(notifier.errorMessage ?? 'Ошибка загрузки'));
     }
 
     final readers = notifier.result.items;
 
     if (readers.isEmpty) {
-      return const Center(
-        child: Text('Читатели не найдены'),
-      );
+      return const Center(child: Text('Читатели не найдены'));
     }
 
     return LayoutBuilder(
@@ -269,9 +246,7 @@ class _ReaderListScreenState extends State<ReaderListScreen> {
             ),
             TableColumnSpec<Reader>(
               label: 'Номер карты',
-              build: (reader) => Text(
-                reader.card?.number ?? '—',
-              ),
+              build: (reader) => Text(reader.card?.number ?? '—'),
             ),
           ],
           items: readers,

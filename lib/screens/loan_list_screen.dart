@@ -13,10 +13,7 @@ import '../widgets/loan_card.dart';
 class LoanListScreen extends StatefulWidget {
   final LoanQuery initialQuery;
 
-  const LoanListScreen({
-    super.key,
-    this.initialQuery = const LoanQuery(),
-  });
+  const LoanListScreen({super.key, this.initialQuery = const LoanQuery()});
 
   @override
   State<LoanListScreen> createState() => _LoanListScreenState();
@@ -25,16 +22,13 @@ class LoanListScreen extends StatefulWidget {
 class _LoanListScreenState extends State<LoanListScreen> {
   late final TextEditingController _searchController;
 
-  LoanListNotifier get notifier =>
-      context.read<LoanListNotifier>();
+  LoanListNotifier get notifier => context.read<LoanListNotifier>();
 
   @override
   void initState() {
     super.initState();
 
-    _searchController = TextEditingController(
-      text: widget.initialQuery.search,
-    );
+    _searchController = TextEditingController(text: widget.initialQuery.search);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -67,9 +61,7 @@ class _LoanListScreenState extends State<LoanListScreen> {
               ),
             ],
           ),
-          drawer: const AppNavigationDrawer(
-            currentRoute: '/loans',
-          ),
+          drawer: const AppNavigationDrawer(currentRoute: '/loans'),
           body: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -90,13 +82,13 @@ class _LoanListScreenState extends State<LoanListScreen> {
                           suffixIcon: _searchController.text.isEmpty
                               ? null
                               : IconButton(
-                            onPressed: () {
-                              _searchController.clear();
-                              notifier.clearSearch();
-                              setState(() {});
-                            },
-                            icon: const Icon(Icons.clear),
-                          ),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    notifier.clearSearch();
+                                    setState(() {});
+                                  },
+                                  icon: const Icon(Icons.clear),
+                                ),
                           border: const OutlineInputBorder(),
                         ),
                         onChanged: (value) {
@@ -135,16 +127,12 @@ class _LoanListScreenState extends State<LoanListScreen> {
 
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Найдено: ${result.total}',
-                  ),
+                  child: Text('Найдено: ${result.total}'),
                 ),
 
                 const SizedBox(height: 12),
 
-                Expanded(
-                  child: _buildContent(),
-                ),
+                Expanded(child: _buildContent()),
 
                 PaginationControls(
                   page: result.page,
@@ -168,25 +156,17 @@ class _LoanListScreenState extends State<LoanListScreen> {
 
   Widget _buildContent() {
     if (notifier.status == LoanLoadStatus.loading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (notifier.status == LoanLoadStatus.error) {
-      return Center(
-        child: Text(
-          notifier.errorMessage ?? 'Ошибка загрузки',
-        ),
-      );
+      return Center(child: Text(notifier.errorMessage ?? 'Ошибка загрузки'));
     }
 
     final loans = notifier.result.items;
 
     if (loans.isEmpty) {
-      return const Center(
-        child: Text('Выдачи не найдены'),
-      );
+      return const Center(child: Text('Выдачи не найдены'));
     }
 
     return LayoutBuilder(
@@ -232,23 +212,17 @@ class _LoanListScreenState extends State<LoanListScreen> {
             TableColumnSpec<Loan>(
               label: 'Выдана',
               sortField: 'issuedAt',
-              build: (loan) => Text(
-                _date(loan.issuedAt),
-              ),
+              build: (loan) => Text(_date(loan.issuedAt)),
             ),
             TableColumnSpec<Loan>(
               label: 'Вернуть до',
               sortField: 'dueAt',
-              build: (loan) => Text(
-                _date(loan.dueAt),
-              ),
+              build: (loan) => Text(_date(loan.dueAt)),
             ),
             TableColumnSpec<Loan>(
               label: 'Статус',
               sortField: 'status',
-              build: (loan) => Text(
-                loan.status,
-              ),
+              build: (loan) => Text(loan.status),
             ),
           ],
           items: loans,
@@ -279,10 +253,6 @@ class _LoanListScreenState extends State<LoanListScreen> {
   }
 
   static String _date(DateTime value) {
-    return value
-        .toLocal()
-        .toString()
-        .split(' ')
-        .first;
+    return value.toLocal().toString().split(' ').first;
   }
 }

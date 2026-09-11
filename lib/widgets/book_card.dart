@@ -47,9 +47,7 @@ class BookCard extends StatelessWidget {
                   children: [
                     Text(
                       book.title,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium,
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 6),
                     Text('ISBN: ${book.isbn}'),
@@ -57,8 +55,8 @@ class BookCard extends StatelessWidget {
                     Text('Страницы: ${book.pages}'),
                     Text(
                       'Экземпляры: '
-                          '${book.copiesAvailable}/'
-                          '${book.copiesTotal}',
+                      '${book.copiesAvailable}/'
+                      '${book.copiesTotal}',
                     ),
 
                     if (book.isDeleted) ...[
@@ -66,9 +64,7 @@ class BookCard extends StatelessWidget {
                       Text(
                         'Удалена',
                         style: TextStyle(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .error,
+                          color: Theme.of(context).colorScheme.error,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -82,9 +78,7 @@ class BookCard extends StatelessWidget {
                         IconButton(
                           tooltip: 'Открыть',
                           onPressed: onOpen,
-                          icon: const Icon(
-                            Icons.open_in_new,
-                          ),
+                          icon: const Icon(Icons.open_in_new),
                         ),
                         IconButton(
                           tooltip: 'Редактировать',
@@ -94,25 +88,19 @@ class BookCard extends StatelessWidget {
                         IconButton(
                           tooltip: 'Редактировать',
                           onPressed: onEdit,
-                          icon: const Icon(
-                            Icons.edit,
-                          ),
+                          icon: const Icon(Icons.edit),
                         ),
 
                         if (book.isDeleted) ...[
                           IconButton(
                             tooltip: 'Восстановить',
                             onPressed: onRestore,
-                            icon: const Icon(
-                              Icons.restore,
-                            ),
+                            icon: const Icon(Icons.restore),
                           ),
                           IconButton(
                             tooltip: 'Удалить окончательно',
                             onPressed: onHardDelete,
-                            icon: const Icon(
-                              Icons.delete_forever,
-                            ),
+                            icon: const Icon(Icons.delete_forever),
                           ),
                         ],
                       ],

@@ -9,41 +9,27 @@ import '../state/author_list_notifier.dart';
 class AuthorDetailScreen extends StatelessWidget {
   final int id;
 
-  const AuthorDetailScreen({
-    super.key,
-    required this.id,
-  });
+  const AuthorDetailScreen({super.key, required this.id});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Автор'),
-      ),
+      appBar: AppBar(title: const Text('Автор')),
       body: FutureBuilder<Author?>(
         future: context.read<AuthorRepository>().findById(id),
         builder: (context, snapshot) {
-          if (snapshot.connectionState ==
-              ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
-            return Center(
-              child: Text(
-                'Ошибка загрузки: ${snapshot.error}',
-              ),
-            );
+            return Center(child: Text('Ошибка загрузки: ${snapshot.error}'));
           }
 
           final author = snapshot.data;
 
           if (author == null) {
-            return const Center(
-              child: Text('Автор не найден'),
-            );
+            return const Center(child: Text('Автор не найден'));
           }
 
           return _AuthorCard(author: author);
@@ -56,9 +42,7 @@ class AuthorDetailScreen extends StatelessWidget {
 class _AuthorCard extends StatelessWidget {
   final Author author;
 
-  const _AuthorCard({
-    required this.author,
-  });
+  const _AuthorCard({required this.author});
 
   Future<void> _deleteAuthor(BuildContext context) async {
     final confirmed = await showDialog<bool>(
@@ -67,7 +51,7 @@ class _AuthorCard extends StatelessWidget {
         title: const Text('Удалить автора?'),
         content: Text(
           'Вы действительно хотите удалить автора '
-              '«${author.fullName}»?',
+          '«${author.fullName}»?',
         ),
         actions: [
           TextButton(
@@ -90,9 +74,7 @@ class _AuthorCard extends StatelessWidget {
       return;
     }
 
-    await context
-        .read<AuthorListNotifier>()
-        .deleteAuthor(author.id);
+    await context.read<AuthorListNotifier>().deleteAuthor(author.id);
 
     if (!context.mounted) return;
 
@@ -100,9 +82,7 @@ class _AuthorCard extends StatelessWidget {
   }
 
   Future<void> _restoreAuthor(BuildContext context) async {
-    await context
-        .read<AuthorListNotifier>()
-        .restoreItem(author.id);
+    await context.read<AuthorListNotifier>().restoreItem(author.id);
 
     if (!context.mounted) return;
 
@@ -116,7 +96,7 @@ class _AuthorCard extends StatelessWidget {
         title: const Text('Удалить автора окончательно?'),
         content: Text(
           'Автор «${author.fullName}» будет удалён без '
-              'возможности восстановления.',
+          'возможности восстановления.',
         ),
         actions: [
           TextButton(
@@ -139,9 +119,7 @@ class _AuthorCard extends StatelessWidget {
       return;
     }
 
-    await context
-        .read<AuthorListNotifier>()
-        .hardDeleteItem(author.id);
+    await context.read<AuthorListNotifier>().hardDeleteItem(author.id);
 
     if (!context.mounted) return;
 
@@ -164,9 +142,7 @@ class _AuthorCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       author.fullName,
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineMedium,
+                      style: Theme.of(context).textTheme.headlineMedium,
                     ),
                   ),
                   Wrap(
@@ -175,9 +151,7 @@ class _AuthorCard extends StatelessWidget {
                       IconButton(
                         tooltip: 'Редактировать',
                         onPressed: () {
-                          context.go(
-                            '/authors/${author.id}/edit',
-                          );
+                          context.go('/authors/${author.id}/edit');
                         },
                         icon: const Icon(Icons.edit),
                       ),
@@ -203,9 +177,7 @@ class _AuthorCard extends StatelessWidget {
                           onPressed: () {
                             _hardDeleteAuthor(context);
                           },
-                          icon: const Icon(
-                            Icons.delete_forever,
-                          ),
+                          icon: const Icon(Icons.delete_forever),
                         ),
                     ],
                   ),
@@ -214,18 +186,12 @@ class _AuthorCard extends StatelessWidget {
 
               const SizedBox(height: 24),
 
-              _InfoRow(
-                label: 'ФИО',
-                value: author.fullName,
-              ),
+              _InfoRow(label: 'ФИО', value: author.fullName),
               _InfoRow(
                 label: 'Год рождения',
                 value: author.birthYear.toString(),
               ),
-              _InfoRow(
-                label: 'Страна',
-                value: author.country,
-              ),
+              _InfoRow(label: 'Страна', value: author.country),
 
               if (author.isDeleted)
                 const Padding(
@@ -250,10 +216,7 @@ class _InfoRow extends StatelessWidget {
   final String label;
   final String value;
 
-  const _InfoRow({
-    required this.label,
-    required this.value,
-  });
+  const _InfoRow({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -266,14 +229,10 @@ class _InfoRow extends StatelessWidget {
             width: 190,
             child: Text(
               label,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
-          Expanded(
-            child: Text(value),
-          ),
+          Expanded(child: Text(value)),
         ],
       ),
     );

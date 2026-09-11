@@ -31,25 +31,17 @@ class ReaderCard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Row(
-            crossAxisAlignment:
-            CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Checkbox(
-                value: selected,
-                onChanged: (_) =>
-                    onSelectionChanged(),
-              ),
+              Checkbox(value: selected, onChanged: (_) => onSelectionChanged()),
               const SizedBox(width: 8),
               Expanded(
                 child: Column(
-                  crossAxisAlignment:
-                  CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       reader.fullName,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium,
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 6),
                     Text(reader.email),
@@ -61,14 +53,10 @@ class ReaderCard extends StatelessWidget {
                     ),
                     if (reader.isDeleted)
                       const Padding(
-                        padding:
-                        EdgeInsets.only(top: 6),
+                        padding: EdgeInsets.only(top: 6),
                         child: Text(
                           'Удалён',
-                          style: TextStyle(
-                            fontWeight:
-                            FontWeight.bold,
-                          ),
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
                     Wrap(
@@ -77,33 +65,23 @@ class ReaderCard extends StatelessWidget {
                         IconButton(
                           tooltip: 'Открыть',
                           onPressed: onOpen,
-                          icon: const Icon(
-                            Icons.open_in_new,
-                          ),
+                          icon: const Icon(Icons.open_in_new),
                         ),
                         IconButton(
                           tooltip: 'Редактировать',
                           onPressed: onEdit,
-                          icon: const Icon(
-                            Icons.edit,
-                          ),
+                          icon: const Icon(Icons.edit),
                         ),
                         if (reader.isDeleted) ...[
                           IconButton(
-                            tooltip:
-                            'Восстановить',
+                            tooltip: 'Восстановить',
                             onPressed: onRestore,
-                            icon: const Icon(
-                              Icons.restore,
-                            ),
+                            icon: const Icon(Icons.restore),
                           ),
                           IconButton(
-                            tooltip:
-                            'Удалить окончательно',
+                            tooltip: 'Удалить окончательно',
                             onPressed: onHardDelete,
-                            icon: const Icon(
-                              Icons.delete_forever,
-                            ),
+                            icon: const Icon(Icons.delete_forever),
                           ),
                         ],
                       ],
