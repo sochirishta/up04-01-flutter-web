@@ -30,10 +30,13 @@ class ApiBookRepository implements BookRepository {
         },
         cancelToken: cancelToken,
       );
+
       final data = response.data as Map<String, dynamic>;
+
       final items = (data['items'] as List)
           .map((item) => Book.fromJson(item as Map<String, dynamic>))
           .toList();
+
       return PageResult<Book>(
         items: items,
         page: data['page'] as int,
@@ -47,6 +50,7 @@ class ApiBookRepository implements BookRepository {
   Future<Book?> findById(int id) {
     return guard(() async {
       final response = await _dio.get('/books/$id');
+
       return Book.fromJson(response.data as Map<String, dynamic>);
     });
   }
@@ -88,6 +92,7 @@ class ApiBookRepository implements BookRepository {
           'copiesTotal': book.copiesTotal,
         },
       );
+
       return Book.fromJson(response.data as Map<String, dynamic>);
     });
   }
@@ -95,21 +100,21 @@ class ApiBookRepository implements BookRepository {
   @override
   Future<void> softDelete(int id) {
     return guard(() async {
-      await _dio.delete('books/$id');
+      await _dio.delete('/books/$id');
     });
   }
 
   @override
   Future<void> hardDelete(int id) {
     return guard(() async {
-      await _dio.delete('books/$id', queryParameters: {'hard': true});
+      await _dio.delete('/books/$id', queryParameters: {'hard': true});
     });
   }
 
   @override
   Future<void> restore(int id) {
     return guard(() async {
-      await _dio.post('books/$id/restore');
+      await _dio.post('/books/$id/restore');
     });
   }
 
@@ -120,7 +125,9 @@ class ApiBookRepository implements BookRepository {
         '/books/bulk-delete',
         data: {'ids': ids},
       );
+
       final data = response.data as Map<String, dynamic>;
+
       return data['deleted'] as int;
     });
   }

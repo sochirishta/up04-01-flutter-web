@@ -5,9 +5,9 @@ import '../models/author.dart';
 class AuthorCard extends StatelessWidget {
   final Author author;
   final bool selected;
-  final VoidCallback onSelectionChanged;
+  final VoidCallback? onSelectionChanged;
   final VoidCallback onOpen;
-  final VoidCallback onEdit;
+  final VoidCallback? onEdit;
   final VoidCallback? onRestore;
   final VoidCallback? onHardDelete;
 
@@ -15,15 +15,18 @@ class AuthorCard extends StatelessWidget {
     super.key,
     required this.author,
     required this.selected,
-    required this.onSelectionChanged,
+    this.onSelectionChanged,
     required this.onOpen,
-    required this.onEdit,
+    this.onEdit,
     this.onRestore,
     this.onHardDelete,
   });
 
   @override
   Widget build(BuildContext context) {
+    final selectionCallback = onSelectionChanged;
+    final editCallback = onEdit;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
@@ -34,13 +37,15 @@ class AuthorCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Checkbox(
-                value: selected,
-                onChanged: (_) {
-                  onSelectionChanged();
-                },
-              ),
-              const SizedBox(width: 8),
+              if (selectionCallback != null) ...[
+                Checkbox(
+                  value: selected,
+                  onChanged: (_) {
+                    selectionCallback();
+                  },
+                ),
+                const SizedBox(width: 8),
+              ],
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,11 +79,12 @@ class AuthorCard extends StatelessWidget {
                           onPressed: onOpen,
                           icon: const Icon(Icons.open_in_new),
                         ),
-                        IconButton(
-                          tooltip: 'Редактировать',
-                          onPressed: onEdit,
-                          icon: const Icon(Icons.edit),
-                        ),
+                        if (editCallback != null)
+                          IconButton(
+                            tooltip: 'Редактировать',
+                            onPressed: onEdit,
+                            icon: const Icon(Icons.edit),
+                          ),
                         if (author.isDeleted) ...[
                           IconButton(
                             tooltip: 'Восстановить',

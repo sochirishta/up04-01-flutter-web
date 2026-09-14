@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../models/app_user.dart';
 import '../models/genre.dart';
 import '../models/genre_query.dart';
+import '../state/auth_notifier.dart';
 import '../state/entity_list_notifier.dart';
 import '../state/genre_list_notifier.dart';
+import '../widgets/app_navigation_drawer.dart';
 import '../widgets/entity_table.dart';
 import '../widgets/genre_card.dart';
 import '../widgets/pagination_controls.dart';
-import '../widgets/app_navigation_drawer.dart';
 
 class GenreListScreen extends StatefulWidget {
   final GenreQuery initialQuery;
@@ -30,7 +32,6 @@ class _GenreListScreenState extends State<GenreListScreen> {
     final notifier = context.read<GenreListNotifier>();
 
     notifier.addListener(_updateUrl);
-
     notifier.setQuery(widget.initialQuery);
     _searchController.text = widget.initialQuery.search;
   }
@@ -61,15 +62,11 @@ class _GenreListScreenState extends State<GenreListScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(false);
-            },
+            onPressed: () => Navigator.of(context).pop(false),
             child: const Text('Отмена'),
           ),
           FilledButton(
-            onPressed: () {
-              Navigator.of(context).pop(true);
-            },
+            onPressed: () => Navigator.of(context).pop(true),
             child: const Text('Удалить'),
           ),
         ],
@@ -91,6 +88,11 @@ class _GenreListScreenState extends State<GenreListScreen> {
   @override
   Widget build(BuildContext context) {
     final notifier = context.watch<GenreListNotifier>();
+    final auth = context.watch<AuthNotifier>();
+
+    final canManage = auth.has(Role.librarian);
+    final canAdmin = auth.has(Role.admin);
+
     final result = notifier.result;
     final query = notifier.query;
 
@@ -105,13 +107,14 @@ class _GenreListScreenState extends State<GenreListScreen> {
     return Scaffold(
       appBar: AppBar(
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            tooltip: 'Добавить жанр',
-            onPressed: () {
-              context.go('/genres/new');
-            },
-          ),
+          if (canManage)
+            IconButton(
+              icon: const Icon(Icons.add),
+              tooltip: 'Добавить жанр',
+              onPressed: () {
+                context.go('/genres/new');
+              },
+            ),
         ],
       ),
       drawer: const AppNavigationDrawer(currentRoute: '/genres'),
@@ -119,9 +122,7 @@ class _GenreListScreenState extends State<GenreListScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           Text('Жанры', style: Theme.of(context).textTheme.headlineMedium),
-
           const SizedBox(height: 16),
-
           TextField(
             controller: _searchController,
             decoration: InputDecoration(
@@ -140,26 +141,25 @@ class _GenreListScreenState extends State<GenreListScreen> {
             ),
             onChanged: notifier.search,
           ),
-
           const SizedBox(height: 12),
-
           Wrap(
             spacing: 16,
             runSpacing: 8,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text('Найдено: ${result.total}'),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('Удалённые'),
-                  Switch(
-                    value: query.includeDeleted,
-                    onChanged: notifier.setIncludeDeleted,
-                  ),
-                ],
-              ),
-              if (notifier.hasSelection)
+              if (canManage)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Удалённые'),
+                    Switch(
+                      value: query.includeDeleted,
+                      onChanged: notifier.setIncludeDeleted,
+                    ),
+                  ],
+                ),
+              if (canManage && notifier.hasSelection)
                 FilledButton.icon(
                   onPressed: _deleteSelected,
                   icon: const Icon(Icons.delete),
@@ -167,9 +167,7 @@ class _GenreListScreenState extends State<GenreListScreen> {
                 ),
             ],
           ),
-
           const SizedBox(height: 16),
-
           if (result.items.isEmpty)
             const Center(child: Text('Жанры не найдены'))
           else
@@ -182,19 +180,23 @@ class _GenreListScreenState extends State<GenreListScreen> {
                           (genre) => GenreCard(
                             genre: genre,
                             selected: notifier.selected.contains(genre.id),
-                            onSelectionChanged: () {
-                              notifier.toggleSelection(genre.id);
-                            },
+                            onSelectionChanged: canManage
+                                ? () {
+                                    notifier.toggleSelection(genre.id);
+                                  }
+                                : null,
                             onOpen: () {
                               context.go('/genres/${genre.id}');
                             },
-                            onEdit: () {
-                              context.go('/genres/${genre.id}/edit');
-                            },
-                            onRestore: genre.isDeleted
+                            onEdit: canManage
+                                ? () {
+                                    context.go('/genres/${genre.id}/edit');
+                                  }
+                                : null,
+                            onRestore: canAdmin && genre.isDeleted
                                 ? () => notifier.restoreItem(genre.id)
                                 : null,
-                            onHardDelete: genre.isDeleted
+                            onHardDelete: canAdmin && genre.isDeleted
                                 ? () => notifier.hardDeleteItem(genre.id)
                                 : null,
                           ),
@@ -207,7 +209,7 @@ class _GenreListScreenState extends State<GenreListScreen> {
                   items: result.items,
                   selected: notifier.selected,
                   idOf: (genre) => genre.id,
-                  onToggleSelect: notifier.toggleSelection,
+                  onToggleSelect: canManage ? notifier.toggleSelection : null,
                   sortField: query.sortField,
                   sortAscending: query.sortAscending,
                   onSort: notifier.sort,
@@ -231,14 +233,15 @@ class _GenreListScreenState extends State<GenreListScreen> {
                       },
                       icon: const Icon(Icons.open_in_new),
                     ),
-                    IconButton(
-                      tooltip: 'Редактировать',
-                      onPressed: () {
-                        context.go('/genres/${genre.id}/edit');
-                      },
-                      icon: const Icon(Icons.edit),
-                    ),
-                    if (genre.isDeleted)
+                    if (canManage)
+                      IconButton(
+                        tooltip: 'Редактировать',
+                        onPressed: () {
+                          context.go('/genres/${genre.id}/edit');
+                        },
+                        icon: const Icon(Icons.edit),
+                      ),
+                    if (canAdmin && genre.isDeleted)
                       IconButton(
                         tooltip: 'Восстановить',
                         onPressed: () {
@@ -246,7 +249,7 @@ class _GenreListScreenState extends State<GenreListScreen> {
                         },
                         icon: const Icon(Icons.restore),
                       ),
-                    if (genre.isDeleted)
+                    if (canAdmin && genre.isDeleted)
                       IconButton(
                         tooltip: 'Удалить окончательно',
                         onPressed: () {
@@ -258,7 +261,6 @@ class _GenreListScreenState extends State<GenreListScreen> {
                 );
               },
             ),
-
           if (result.total > 0)
             PaginationControls(
               page: result.page,

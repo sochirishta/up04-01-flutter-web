@@ -5,9 +5,9 @@ import '../models/publisher.dart';
 class PublisherCard extends StatelessWidget {
   final Publisher publisher;
   final bool selected;
-  final VoidCallback onSelectionChanged;
+  final VoidCallback? onSelectionChanged;
   final VoidCallback onOpen;
-  final VoidCallback onEdit;
+  final VoidCallback? onEdit;
   final VoidCallback? onRestore;
   final VoidCallback? onHardDelete;
 
@@ -15,15 +15,18 @@ class PublisherCard extends StatelessWidget {
     super.key,
     required this.publisher,
     required this.selected,
-    required this.onSelectionChanged,
+    this.onSelectionChanged,
     required this.onOpen,
-    required this.onEdit,
+    this.onEdit,
     this.onRestore,
     this.onHardDelete,
   });
 
   @override
   Widget build(BuildContext context) {
+    final selectionCallback = onSelectionChanged;
+    final editCallback = onEdit;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
@@ -34,13 +37,15 @@ class PublisherCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Checkbox(
-                value: selected,
-                onChanged: (_) {
-                  onSelectionChanged();
-                },
-              ),
-              const SizedBox(width: 8),
+              if (selectionCallback != null) ...[
+                Checkbox(
+                  value: selected,
+                  onChanged: (_) {
+                    selectionCallback();
+                  },
+                ),
+                const SizedBox(width: 8),
+              ],
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -51,10 +56,7 @@ class PublisherCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text('Город: ${publisher.city}'),
-                    Text(
-                      'Год основания: '
-                      '${publisher.foundedYear}',
-                    ),
+                    Text('Год основания: ${publisher.foundedYear}'),
                     if (publisher.isDeleted) ...[
                       const SizedBox(height: 6),
                       Text(
@@ -74,23 +76,24 @@ class PublisherCard extends StatelessWidget {
                           onPressed: onOpen,
                           icon: const Icon(Icons.open_in_new),
                         ),
-                        IconButton(
-                          tooltip: 'Редактировать',
-                          onPressed: onEdit,
-                          icon: const Icon(Icons.edit),
-                        ),
-                        if (publisher.isDeleted) ...[
+                        if (editCallback != null)
+                          IconButton(
+                            tooltip: 'Редактировать',
+                            onPressed: editCallback,
+                            icon: const Icon(Icons.edit),
+                          ),
+                        if (publisher.isDeleted && onRestore != null)
                           IconButton(
                             tooltip: 'Восстановить',
                             onPressed: onRestore,
                             icon: const Icon(Icons.restore),
                           ),
+                        if (publisher.isDeleted && onHardDelete != null)
                           IconButton(
                             tooltip: 'Удалить окончательно',
                             onPressed: onHardDelete,
                             icon: const Icon(Icons.delete_forever),
                           ),
-                        ],
                       ],
                     ),
                   ],

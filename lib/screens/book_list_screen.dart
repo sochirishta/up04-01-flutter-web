@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../models/app_user.dart';
 import '../models/author.dart';
 import '../models/book.dart';
 import '../models/book_query.dart';
@@ -11,6 +12,7 @@ import '../models/publisher.dart';
 
 import '../repositories/book_repository.dart';
 
+import '../state/auth_notifier.dart';
 import '../state/book_list_notifier.dart';
 import '../state/entity_list_notifier.dart';
 import '../state/reference_cache.dart';
@@ -253,6 +255,10 @@ class _BookListScreenState extends State<BookListScreen> {
   Widget build(BuildContext context) {
     final notifier = context.watch<BookListNotifier>();
     final references = context.watch<ReferenceCache>();
+    final auth = context.watch<AuthNotifier>();
+
+    final canManage = auth.has(Role.librarian);
+    final canAdmin = auth.has(Role.admin);
 
     final result = notifier.result;
     final query = notifier.query;
@@ -285,13 +291,14 @@ class _BookListScreenState extends State<BookListScreen> {
     return Scaffold(
       appBar: AppBar(
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            tooltip: 'Добавить книгу',
-            onPressed: () {
-              context.go('/books/new');
-            },
-          ),
+          if (canManage)
+            IconButton(
+              icon: const Icon(Icons.add),
+              tooltip: 'Добавить книгу',
+              onPressed: () {
+                context.go('/books/new');
+              },
+            ),
         ],
       ),
       drawer: const AppNavigationDrawer(currentRoute: '/books'),
@@ -445,16 +452,17 @@ class _BookListScreenState extends State<BookListScreen> {
                 ),
               ),
 
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('Удалённые'),
-                  Switch(
-                    value: query.includeDeleted,
-                    onChanged: notifier.setIncludeDeleted,
-                  ),
-                ],
-              ),
+              if (canManage)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Удалённые'),
+                    Switch(
+                      value: query.includeDeleted,
+                      onChanged: notifier.setIncludeDeleted,
+                    ),
+                  ],
+                ),
 
               OutlinedButton(
                 onPressed: () {
@@ -477,7 +485,7 @@ class _BookListScreenState extends State<BookListScreen> {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text('Найдено: ${result.total}'),
-              if (notifier.hasSelection)
+              if (canManage && notifier.hasSelection)
                 FilledButton.icon(
                   onPressed: _deleteSelected,
                   icon: const Icon(Icons.delete),
@@ -505,19 +513,23 @@ class _BookListScreenState extends State<BookListScreen> {
                           (book) => BookCard(
                             book: book,
                             selected: notifier.selected.contains(book.id),
-                            onSelectionChanged: () {
-                              notifier.toggleSelection(book.id);
-                            },
+                            onSelectionChanged: canManage
+                                ? () {
+                                    notifier.toggleSelection(book.id);
+                                  }
+                                : null,
                             onOpen: () {
                               context.go('/books/${book.id}');
                             },
-                            onEdit: () {
-                              context.go('/books/${book.id}/edit');
-                            },
-                            onRestore: book.isDeleted
+                            onEdit: canManage
+                                ? () {
+                                    context.go('/books/${book.id}/edit');
+                                  }
+                                : null,
+                            onRestore: canAdmin && book.isDeleted
                                 ? () => notifier.restoreItem(book.id)
                                 : null,
-                            onHardDelete: book.isDeleted
+                            onHardDelete: canAdmin && book.isDeleted
                                 ? () => notifier.hardDeleteItem(book.id)
                                 : null,
                           ),
@@ -530,7 +542,7 @@ class _BookListScreenState extends State<BookListScreen> {
                   items: result.items,
                   selected: notifier.selected,
                   idOf: (book) => book.id,
-                  onToggleSelect: notifier.toggleSelection,
+                  onToggleSelect: canManage ? notifier.toggleSelection : null,
                   sortField: query.sortField,
                   sortAscending: query.sortAscending,
                   onSort: notifier.sort,
@@ -585,14 +597,15 @@ class _BookListScreenState extends State<BookListScreen> {
                       },
                       icon: const Icon(Icons.open_in_new),
                     ),
-                    IconButton(
-                      tooltip: 'Редактировать',
-                      onPressed: () {
-                        context.go('/books/${book.id}/edit');
-                      },
-                      icon: const Icon(Icons.edit),
-                    ),
-                    if (book.isDeleted)
+                    if (canManage)
+                      IconButton(
+                        tooltip: 'Редактировать',
+                        onPressed: () {
+                          context.go('/books/${book.id}/edit');
+                        },
+                        icon: const Icon(Icons.edit),
+                      ),
+                    if (canAdmin && book.isDeleted)
                       IconButton(
                         tooltip: 'Восстановить',
                         onPressed: () {
@@ -600,7 +613,7 @@ class _BookListScreenState extends State<BookListScreen> {
                         },
                         icon: const Icon(Icons.restore),
                       ),
-                    if (book.isDeleted)
+                    if (canAdmin && book.isDeleted)
                       IconButton(
                         tooltip: 'Удалить окончательно',
                         onPressed: () {

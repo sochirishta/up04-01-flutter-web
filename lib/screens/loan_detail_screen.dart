@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../models/app_user.dart';
+import '../state/auth_notifier.dart';
 import '../state/loan_list_notifier.dart';
 
 class LoanDetailScreen extends StatelessWidget {
@@ -48,6 +50,9 @@ class LoanDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final notifier = context.read<LoanListNotifier>();
+    final auth = context.watch<AuthNotifier>();
+
+    final canManage = auth.has(Role.librarian);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Выдача')),
@@ -84,14 +89,17 @@ class LoanDetailScreen extends StatelessWidget {
                             style: Theme.of(context).textTheme.headlineMedium,
                           ),
                         ),
-                        IconButton(
-                          tooltip: 'Редактировать',
-                          onPressed: () {
-                            context.go('/loans/$id/edit');
-                          },
-                          icon: const Icon(Icons.edit),
-                        ),
-                        if (loan.returnedAt == null)
+
+                        if (canManage)
+                          IconButton(
+                            tooltip: 'Редактировать',
+                            onPressed: () {
+                              context.go('/loans/$id/edit');
+                            },
+                            icon: const Icon(Icons.edit),
+                          ),
+
+                        if (canManage && loan.returnedAt == null)
                           IconButton(
                             tooltip: 'Вернуть книгу',
                             onPressed: () => _returnLoan(context),
@@ -99,9 +107,7 @@ class LoanDetailScreen extends StatelessWidget {
                           ),
                       ],
                     ),
-
                     const SizedBox(height: 24),
-
                     _InfoRow(label: 'ID', value: '${loan.id}'),
                     _InfoRow(label: 'ID читателя', value: '${loan.readerId}'),
                     _InfoRow(label: 'ID книги', value: '${loan.bookId}'),

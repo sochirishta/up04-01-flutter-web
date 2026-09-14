@@ -85,21 +85,21 @@ class ApiAuthorRepository implements AuthorRepository {
   @override
   Future<void> softDelete(int id) {
     return guard(() async {
-      await _dio.delete('authors/$id');
+      await _dio.delete('/authors/$id');
     });
   }
 
   @override
   Future<void> hardDelete(int id) {
     return guard(() async {
-      await _dio.delete('authors/$id', queryParameters: {'hard': true});
+      await _dio.delete('/authors/$id', queryParameters: {'hard': true});
     });
   }
 
   @override
   Future<void> restore(int id) {
     return guard(() async {
-      await _dio.post('authors/$id/restore');
+      await _dio.post('/authors/$id/restore');
     });
   }
 

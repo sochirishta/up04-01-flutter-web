@@ -88,7 +88,7 @@ class ApiPublisherRepository implements PublisherRepository {
   @override
   Future<void> delete(int id) {
     return guard(() async {
-      await _dio.delete('publishers/$id');
+      await _dio.delete('/publishers/$id');
     });
   }
 
@@ -109,14 +109,14 @@ class ApiPublisherRepository implements PublisherRepository {
   @override
   Future<void> restore(int id) {
     return guard(() async {
-      await _dio.post('publishers/$id/restore');
+      await _dio.post('/publishers/$id/restore');
     });
   }
 
   @override
   Future<void> hardDelete(int id) {
     return guard(() async {
-      await _dio.delete('publishers/$id', queryParameters: {'hard': true});
+      await _dio.delete('/publishers/$id', queryParameters: {'hard': true});
     });
   }
 }

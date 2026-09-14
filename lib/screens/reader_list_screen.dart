@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:up04_01_flutter_web/widgets/app_navigation_drawer.dart';
 
+import '../models/app_user.dart';
 import '../models/reader.dart';
 import '../models/reader_query.dart';
+import '../state/auth_notifier.dart';
 import '../state/entity_list_notifier.dart';
 import '../state/reader_list_notifier.dart';
+import '../widgets/app_navigation_drawer.dart';
 import '../widgets/entity_table.dart';
 import '../widgets/pagination_controls.dart';
 import '../widgets/reader_card.dart';
@@ -45,7 +47,9 @@ class _ReaderListScreenState extends State<ReaderListScreen> {
   }
 
   Future<void> _deleteSelected() async {
-    if (!notifier.hasSelection) return;
+    if (!notifier.hasSelection) {
+      return;
+    }
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -57,23 +61,31 @@ class _ReaderListScreenState extends State<ReaderListScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
+            onPressed: () {
+              Navigator.of(context).pop(false);
+            },
             child: const Text('Отмена'),
           ),
           FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
+            onPressed: () {
+              Navigator.of(context).pop(true);
+            },
             child: const Text('Удалить'),
           ),
         ],
       ),
     );
 
-    if (confirmed != true) return;
+    if (confirmed != true) {
+      return;
+    }
 
     try {
       await notifier.deleteSelected();
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
     }
@@ -81,6 +93,11 @@ class _ReaderListScreenState extends State<ReaderListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthNotifier>();
+
+    final canManage = auth.has(Role.librarian);
+    final canAdmin = auth.has(Role.admin);
+
     return AnimatedBuilder(
       animation: notifier,
       builder: (context, _) {
@@ -91,11 +108,14 @@ class _ReaderListScreenState extends State<ReaderListScreen> {
           appBar: AppBar(
             title: const Text('Читатели'),
             actions: [
-              IconButton(
-                tooltip: 'Добавить читателя',
-                onPressed: () => context.go('/readers/new'),
-                icon: const Icon(Icons.add),
-              ),
+              if (canManage)
+                IconButton(
+                  tooltip: 'Добавить читателя',
+                  onPressed: () {
+                    context.go('/readers/new');
+                  },
+                  icon: const Icon(Icons.add),
+                ),
             ],
           ),
           drawer: const AppNavigationDrawer(currentRoute: '/readers'),
@@ -126,23 +146,19 @@ class _ReaderListScreenState extends State<ReaderListScreen> {
                     setState(() {});
                   },
                 ),
-
                 const SizedBox(height: 12),
-
                 Row(
                   children: [
                     Text('Найдено: ${result.total}'),
-
                     const Spacer(),
-
-                    const Text('Удалённые'),
-
-                    Switch(
-                      value: query.includeDeleted,
-                      onChanged: notifier.setIncludeDeleted,
-                    ),
-
-                    if (notifier.hasSelection) ...[
+                    if (canManage) ...[
+                      const Text('Удалённые'),
+                      Switch(
+                        value: query.includeDeleted,
+                        onChanged: notifier.setIncludeDeleted,
+                      ),
+                    ],
+                    if (canManage && notifier.hasSelection) ...[
                       const SizedBox(width: 12),
                       FilledButton.icon(
                         onPressed: _deleteSelected,
@@ -152,11 +168,13 @@ class _ReaderListScreenState extends State<ReaderListScreen> {
                     ],
                   ],
                 ),
-
                 const SizedBox(height: 12),
-
-                Expanded(child: _buildContent()),
-
+                Expanded(
+                  child: _buildContent(
+                    canManage: canManage,
+                    canAdmin: canAdmin,
+                  ),
+                ),
                 PaginationControls(
                   page: result.page,
                   totalPages: result.totalPages,
@@ -177,7 +195,7 @@ class _ReaderListScreenState extends State<ReaderListScreen> {
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildContent({required bool canManage, required bool canAdmin}) {
     if (notifier.status == LoadStatus.loading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -203,20 +221,28 @@ class _ReaderListScreenState extends State<ReaderListScreen> {
               return ReaderCard(
                 reader: reader,
                 selected: notifier.selected.contains(reader.id),
-                onSelectionChanged: () {
-                  notifier.toggleSelection(reader.id);
-                },
+                onSelectionChanged: canManage
+                    ? () {
+                        notifier.toggleSelection(reader.id);
+                      }
+                    : null,
                 onOpen: () {
                   context.go('/readers/${reader.id}');
                 },
-                onEdit: () {
-                  context.go('/readers/${reader.id}/edit');
-                },
-                onRestore: reader.isDeleted
-                    ? () => notifier.restoreItem(reader.id)
+                onEdit: canManage
+                    ? () {
+                        context.go('/readers/${reader.id}/edit');
+                      }
                     : null,
-                onHardDelete: reader.isDeleted
-                    ? () => notifier.hardDeleteItem(reader.id)
+                onRestore: canAdmin && reader.isDeleted
+                    ? () {
+                        notifier.restoreItem(reader.id);
+                      }
+                    : null,
+                onHardDelete: canAdmin && reader.isDeleted
+                    ? () {
+                        notifier.hardDeleteItem(reader.id);
+                      }
                     : null,
               );
             },
@@ -252,7 +278,7 @@ class _ReaderListScreenState extends State<ReaderListScreen> {
           items: readers,
           idOf: (reader) => reader.id,
           selected: notifier.selected,
-          onToggleSelect: notifier.toggleSelection,
+          onToggleSelect: canManage ? notifier.toggleSelection : null,
           sortField: notifier.query.sortField,
           sortAscending: notifier.query.sortAscending,
           onSort: notifier.sort,
@@ -264,14 +290,15 @@ class _ReaderListScreenState extends State<ReaderListScreen> {
               },
               icon: const Icon(Icons.open_in_new),
             ),
-            IconButton(
-              tooltip: 'Редактировать',
-              onPressed: () {
-                context.go('/readers/${reader.id}/edit');
-              },
-              icon: const Icon(Icons.edit),
-            ),
-            if (reader.isDeleted)
+            if (canManage)
+              IconButton(
+                tooltip: 'Редактировать',
+                onPressed: () {
+                  context.go('/readers/${reader.id}/edit');
+                },
+                icon: const Icon(Icons.edit),
+              ),
+            if (canAdmin && reader.isDeleted)
               IconButton(
                 tooltip: 'Восстановить',
                 onPressed: () {
@@ -279,7 +306,7 @@ class _ReaderListScreenState extends State<ReaderListScreen> {
                 },
                 icon: const Icon(Icons.restore),
               ),
-            if (reader.isDeleted)
+            if (canAdmin && reader.isDeleted)
               IconButton(
                 tooltip: 'Удалить окончательно',
                 onPressed: () {

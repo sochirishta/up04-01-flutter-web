@@ -85,7 +85,7 @@ class ApiReaderRepository implements ReaderRepository {
   @override
   Future<void> delete(int id) {
     return guard(() async {
-      await _dio.delete('readers/$id');
+      await _dio.delete('/readers/$id');
     });
   }
 
@@ -106,14 +106,14 @@ class ApiReaderRepository implements ReaderRepository {
   @override
   Future<void> restore(int id) {
     return guard(() async {
-      await _dio.post('readers/$id/restore');
+      await _dio.post('/readers/$id/restore');
     });
   }
 
   @override
   Future<void> hardDelete(int id) {
     return guard(() async {
-      await _dio.delete('readers/$id', queryParameters: {'hard': true});
+      await _dio.delete('/readers/$id', queryParameters: {'hard': true});
     });
   }
 }

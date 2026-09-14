@@ -77,7 +77,7 @@ class ApiGenreRepository implements GenreRepository {
   @override
   Future<void> delete(int id) {
     return guard(() async {
-      await _dio.delete('genres/$id');
+      await _dio.delete('/genres/$id');
     });
   }
 
@@ -98,14 +98,14 @@ class ApiGenreRepository implements GenreRepository {
   @override
   Future<void> restore(int id) {
     return guard(() async {
-      await _dio.post('genres/$id/restore');
+      await _dio.post('/genres/$id/restore');
     });
   }
 
   @override
   Future<void> hardDelete(int id) {
     return guard(() async {
-      await _dio.delete('genres/$id', queryParameters: {'hard': true});
+      await _dio.delete('/genres/$id', queryParameters: {'hard': true});
     });
   }
 }
