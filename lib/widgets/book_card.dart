@@ -5,9 +5,9 @@ import '../models/book.dart';
 class BookCard extends StatelessWidget {
   final Book book;
   final bool selected;
-  final VoidCallback onSelectionChanged;
+  final VoidCallback? onSelectionChanged;
   final VoidCallback onOpen;
-  final VoidCallback onEdit;
+  final VoidCallback? onEdit;
   final VoidCallback? onRestore;
   final VoidCallback? onHardDelete;
 
@@ -15,15 +15,18 @@ class BookCard extends StatelessWidget {
     super.key,
     required this.book,
     required this.selected,
-    required this.onSelectionChanged,
+    this.onSelectionChanged,
     required this.onOpen,
-    required this.onEdit,
+    this.onEdit,
     this.onRestore,
     this.onHardDelete,
   });
 
   @override
   Widget build(BuildContext context) {
+    final selectionCallback = onSelectionChanged;
+    final editCallback = onEdit;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
@@ -34,13 +37,15 @@ class BookCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Checkbox(
-                value: selected,
-                onChanged: (_) {
-                  onSelectionChanged();
-                },
-              ),
-              const SizedBox(width: 8),
+              if (selectionCallback != null) ...[
+                Checkbox(
+                  value: selected,
+                  onChanged: (_) {
+                    selectionCallback();
+                  },
+                ),
+                const SizedBox(width: 8),
+              ],
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,7 +63,6 @@ class BookCard extends StatelessWidget {
                       '${book.copiesAvailable}/'
                       '${book.copiesTotal}',
                     ),
-
                     if (book.isDeleted) ...[
                       const SizedBox(height: 6),
                       Text(
@@ -69,9 +73,7 @@ class BookCard extends StatelessWidget {
                         ),
                       ),
                     ],
-
                     const SizedBox(height: 8),
-
                     Wrap(
                       spacing: 4,
                       children: [
@@ -80,29 +82,24 @@ class BookCard extends StatelessWidget {
                           onPressed: onOpen,
                           icon: const Icon(Icons.open_in_new),
                         ),
-                        IconButton(
-                          tooltip: 'Редактировать',
-                          onPressed: onEdit,
-                          icon: const Icon(Icons.edit),
-                        ),
-                        IconButton(
-                          tooltip: 'Редактировать',
-                          onPressed: onEdit,
-                          icon: const Icon(Icons.edit),
-                        ),
-
-                        if (book.isDeleted) ...[
+                        if (editCallback != null)
+                          IconButton(
+                            tooltip: 'Редактировать',
+                            onPressed: editCallback,
+                            icon: const Icon(Icons.edit),
+                          ),
+                        if (book.isDeleted && onRestore != null)
                           IconButton(
                             tooltip: 'Восстановить',
                             onPressed: onRestore,
                             icon: const Icon(Icons.restore),
                           ),
+                        if (book.isDeleted && onHardDelete != null)
                           IconButton(
                             tooltip: 'Удалить окончательно',
                             onPressed: onHardDelete,
                             icon: const Icon(Icons.delete_forever),
                           ),
-                        ],
                       ],
                     ),
                   ],

@@ -4,33 +4,30 @@ import '../models/loan.dart';
 
 class LoanCard extends StatelessWidget {
   final Loan loan;
-  final bool selected;
-  final VoidCallback onSelectionChanged;
   final VoidCallback onOpen;
-  final VoidCallback onEdit;
+  final VoidCallback? onEdit;
 
   const LoanCard({
     super.key,
     required this.loan,
-    required this.selected,
-    required this.onSelectionChanged,
     required this.onOpen,
-    required this.onEdit,
+    this.onEdit,
   });
 
   @override
   Widget build(BuildContext context) {
+    final editCallback = onEdit;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
+        borderRadius: BorderRadius.circular(12),
         onTap: onOpen,
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Checkbox(value: selected, onChanged: (_) => onSelectionChanged()),
-              const SizedBox(width: 8),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -45,6 +42,7 @@ class LoanCard extends StatelessWidget {
                     Text('Выдана: ${_date(loan.issuedAt)}'),
                     Text('Вернуть до: ${_date(loan.dueAt)}'),
                     Text('Статус: ${loan.status}'),
+                    const SizedBox(height: 8),
                     Wrap(
                       spacing: 4,
                       children: [
@@ -53,11 +51,12 @@ class LoanCard extends StatelessWidget {
                           onPressed: onOpen,
                           icon: const Icon(Icons.open_in_new),
                         ),
-                        IconButton(
-                          tooltip: 'Редактировать',
-                          onPressed: onEdit,
-                          icon: const Icon(Icons.edit),
-                        ),
+                        if (editCallback != null)
+                          IconButton(
+                            tooltip: 'Редактировать',
+                            onPressed: editCallback,
+                            icon: const Icon(Icons.edit),
+                          ),
                       ],
                     ),
                   ],

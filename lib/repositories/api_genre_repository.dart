@@ -12,7 +12,10 @@ class ApiGenreRepository implements GenreRepository {
   ApiGenreRepository(this._dio);
 
   @override
-  Future<PageResult<Genre>> find(GenreQuery q, {CancelToken? cancelToken}) {
+  Future<PageResult<Genre>> find(
+      GenreQuery q, {
+        CancelToken? cancelToken,
+      }) {
     return guard(() async {
       final response = await _dio.get(
         '/genres',
@@ -55,7 +58,10 @@ class ApiGenreRepository implements GenreRepository {
     return guard(() async {
       final response = await _dio.post(
         '/genres',
-        data: {'name': genre.name, 'description': genre.description},
+        data: {
+          'name': genre.name,
+          'description': genre.description,
+        },
       );
 
       return Genre.fromJson(response.data as Map<String, dynamic>);
@@ -67,7 +73,10 @@ class ApiGenreRepository implements GenreRepository {
     return guard(() async {
       final response = await _dio.put(
         '/genres/${genre.id}',
-        data: {'name': genre.name, 'description': genre.description},
+        data: {
+          'name': genre.name,
+          'description': genre.description,
+        },
       );
 
       return Genre.fromJson(response.data as Map<String, dynamic>);
@@ -77,7 +86,7 @@ class ApiGenreRepository implements GenreRepository {
   @override
   Future<void> delete(int id) {
     return guard(() async {
-      await _dio.delete('genres/$id');
+      await _dio.delete('/genres/$id');
     });
   }
 
@@ -98,14 +107,17 @@ class ApiGenreRepository implements GenreRepository {
   @override
   Future<void> restore(int id) {
     return guard(() async {
-      await _dio.post('genres/$id/restore');
+      await _dio.post('/genres/$id/restore');
     });
   }
 
   @override
   Future<void> hardDelete(int id) {
     return guard(() async {
-      await _dio.delete('genres/$id', queryParameters: {'hard': true});
+      await _dio.delete(
+        '/genres/$id',
+        queryParameters: {'hard': true},
+      );
     });
   }
 }

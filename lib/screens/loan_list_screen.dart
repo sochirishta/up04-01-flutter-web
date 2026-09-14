@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:up04_01_flutter_web/widgets/app_navigation_drawer.dart';
 
+import '../models/app_user.dart';
 import '../models/loan.dart';
 import '../models/loan_query.dart';
+import '../state/auth_notifier.dart';
 import '../state/loan_list_notifier.dart';
+import '../widgets/app_navigation_drawer.dart';
 import '../widgets/entity_table.dart';
-import '../widgets/pagination_controls.dart';
 import '../widgets/loan_card.dart';
+import '../widgets/pagination_controls.dart';
 
 class LoanListScreen extends StatefulWidget {
   final LoanQuery initialQuery;
@@ -45,20 +47,28 @@ class _LoanListScreenState extends State<LoanListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthNotifier>();
+
+    final canManage = auth.has(Role.librarian);
+
     return AnimatedBuilder(
       animation: notifier,
       builder: (context, _) {
         final result = notifier.result;
+        final query = notifier.query;
 
         return Scaffold(
           appBar: AppBar(
             title: const Text('Выдачи'),
             actions: [
-              IconButton(
-                tooltip: 'Добавить выдачу',
-                onPressed: () => context.go('/loans/new'),
-                icon: const Icon(Icons.add),
-              ),
+              if (canManage)
+                IconButton(
+                  tooltip: 'Добавить выдачу',
+                  onPressed: () {
+                    context.go('/loans/new');
+                  },
+                  icon: const Icon(Icons.add),
+                ),
             ],
           ),
           drawer: const AppNavigationDrawer(currentRoute: '/loans'),
@@ -98,7 +108,7 @@ class _LoanListScreenState extends State<LoanListScreen> {
                       ),
                     ),
                     DropdownButton<String?>(
-                      value: notifier.query.status,
+                      value: query.status,
                       hint: const Text('Статус'),
                       items: const [
                         DropdownMenuItem<String?>(
@@ -122,18 +132,13 @@ class _LoanListScreenState extends State<LoanListScreen> {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 12),
-
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text('Найдено: ${result.total}'),
                 ),
-
                 const SizedBox(height: 12),
-
-                Expanded(child: _buildContent()),
-
+                Expanded(child: _buildContent(canManage: canManage)),
                 PaginationControls(
                   page: result.page,
                   totalPages: result.totalPages,
@@ -154,7 +159,7 @@ class _LoanListScreenState extends State<LoanListScreen> {
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildContent({required bool canManage}) {
     if (notifier.status == LoanLoadStatus.loading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -179,14 +184,14 @@ class _LoanListScreenState extends State<LoanListScreen> {
 
               return LoanCard(
                 loan: loan,
-                selected: false,
-                onSelectionChanged: () {},
                 onOpen: () {
                   context.go('/loans/${loan.id}');
                 },
-                onEdit: () {
-                  context.go('/loans/${loan.id}/edit');
-                },
+                onEdit: canManage
+                    ? () {
+                        context.go('/loans/${loan.id}/edit');
+                      }
+                    : null,
               );
             },
           );
@@ -239,13 +244,14 @@ class _LoanListScreenState extends State<LoanListScreen> {
               },
               icon: const Icon(Icons.open_in_new),
             ),
-            IconButton(
-              tooltip: 'Редактировать',
-              onPressed: () {
-                context.go('/loans/${loan.id}/edit');
-              },
-              icon: const Icon(Icons.edit),
-            ),
+            if (canManage)
+              IconButton(
+                tooltip: 'Редактировать',
+                onPressed: () {
+                  context.go('/loans/${loan.id}/edit');
+                },
+                icon: const Icon(Icons.edit),
+              ),
           ],
         );
       },

@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../models/app_user.dart';
 import '../models/publisher.dart';
 import '../models/publisher_query.dart';
+import '../state/auth_notifier.dart';
 import '../state/entity_list_notifier.dart';
 import '../state/publisher_list_notifier.dart';
+import '../widgets/app_navigation_drawer.dart';
 import '../widgets/entity_table.dart';
 import '../widgets/pagination_controls.dart';
 import '../widgets/publisher_card.dart';
-import '../widgets/app_navigation_drawer.dart';
 
 class PublisherListScreen extends StatefulWidget {
   final PublisherQuery initialQuery;
@@ -95,6 +97,10 @@ class _PublisherListScreenState extends State<PublisherListScreen> {
   @override
   Widget build(BuildContext context) {
     final notifier = context.watch<PublisherListNotifier>();
+    final auth = context.watch<AuthNotifier>();
+
+    final canManage = auth.has(Role.librarian);
+    final canAdmin = auth.has(Role.admin);
 
     final result = notifier.result;
     final query = notifier.query;
@@ -110,13 +116,14 @@ class _PublisherListScreenState extends State<PublisherListScreen> {
     return Scaffold(
       appBar: AppBar(
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            tooltip: 'Добавить издателя',
-            onPressed: () {
-              context.go('/publishers/new');
-            },
-          ),
+          if (canManage)
+            IconButton(
+              icon: const Icon(Icons.add),
+              tooltip: 'Добавить издателя',
+              onPressed: () {
+                context.go('/publishers/new');
+              },
+            ),
         ],
       ),
       drawer: const AppNavigationDrawer(currentRoute: '/publishers'),
@@ -124,9 +131,7 @@ class _PublisherListScreenState extends State<PublisherListScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           Text('Издатели', style: Theme.of(context).textTheme.headlineMedium),
-
           const SizedBox(height: 16),
-
           TextField(
             controller: _searchController,
             decoration: InputDecoration(
@@ -145,26 +150,25 @@ class _PublisherListScreenState extends State<PublisherListScreen> {
             ),
             onChanged: notifier.search,
           ),
-
           const SizedBox(height: 12),
-
           Wrap(
             spacing: 16,
             runSpacing: 8,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text('Найдено: ${result.total}'),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('Удалённые'),
-                  Switch(
-                    value: query.includeDeleted,
-                    onChanged: notifier.setIncludeDeleted,
-                  ),
-                ],
-              ),
-              if (notifier.hasSelection)
+              if (canManage)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Удалённые'),
+                    Switch(
+                      value: query.includeDeleted,
+                      onChanged: notifier.setIncludeDeleted,
+                    ),
+                  ],
+                ),
+              if (canManage && notifier.hasSelection)
                 FilledButton.icon(
                   onPressed: _deleteSelected,
                   icon: const Icon(Icons.delete),
@@ -172,9 +176,7 @@ class _PublisherListScreenState extends State<PublisherListScreen> {
                 ),
             ],
           ),
-
           const SizedBox(height: 16),
-
           if (result.items.isEmpty)
             const Center(child: Text('Издатели не найдены'))
           else
@@ -187,20 +189,30 @@ class _PublisherListScreenState extends State<PublisherListScreen> {
                           (publisher) => PublisherCard(
                             publisher: publisher,
                             selected: notifier.selected.contains(publisher.id),
-                            onSelectionChanged: () {
-                              notifier.toggleSelection(publisher.id);
-                            },
+                            onSelectionChanged: canManage
+                                ? () {
+                                    notifier.toggleSelection(publisher.id);
+                                  }
+                                : null,
                             onOpen: () {
                               context.go('/publishers/${publisher.id}');
                             },
-                            onEdit: () {
-                              context.go('/publishers/${publisher.id}/edit');
-                            },
-                            onRestore: publisher.isDeleted
-                                ? () => notifier.restoreItem(publisher.id)
+                            onEdit: canManage
+                                ? () {
+                                    context.go(
+                                      '/publishers/${publisher.id}/edit',
+                                    );
+                                  }
                                 : null,
-                            onHardDelete: publisher.isDeleted
-                                ? () => notifier.hardDeleteItem(publisher.id)
+                            onRestore: canAdmin && publisher.isDeleted
+                                ? () {
+                                    notifier.restoreItem(publisher.id);
+                                  }
+                                : null,
+                            onHardDelete: canAdmin && publisher.isDeleted
+                                ? () {
+                                    notifier.hardDeleteItem(publisher.id);
+                                  }
                                 : null,
                           ),
                         )
@@ -212,7 +224,7 @@ class _PublisherListScreenState extends State<PublisherListScreen> {
                   items: result.items,
                   selected: notifier.selected,
                   idOf: (publisher) => publisher.id,
-                  onToggleSelect: notifier.toggleSelection,
+                  onToggleSelect: canManage ? notifier.toggleSelection : null,
                   sortField: query.sortField,
                   sortAscending: query.sortAscending,
                   onSort: notifier.sort,
@@ -242,14 +254,15 @@ class _PublisherListScreenState extends State<PublisherListScreen> {
                       },
                       icon: const Icon(Icons.open_in_new),
                     ),
-                    IconButton(
-                      tooltip: 'Редактировать',
-                      onPressed: () {
-                        context.go('/publishers/${publisher.id}/edit');
-                      },
-                      icon: const Icon(Icons.edit),
-                    ),
-                    if (publisher.isDeleted)
+                    if (canManage)
+                      IconButton(
+                        tooltip: 'Редактировать',
+                        onPressed: () {
+                          context.go('/publishers/${publisher.id}/edit');
+                        },
+                        icon: const Icon(Icons.edit),
+                      ),
+                    if (canAdmin && publisher.isDeleted)
                       IconButton(
                         tooltip: 'Восстановить',
                         onPressed: () {
@@ -257,7 +270,7 @@ class _PublisherListScreenState extends State<PublisherListScreen> {
                         },
                         icon: const Icon(Icons.restore),
                       ),
-                    if (publisher.isDeleted)
+                    if (canAdmin && publisher.isDeleted)
                       IconButton(
                         tooltip: 'Удалить окончательно',
                         onPressed: () {
@@ -269,7 +282,6 @@ class _PublisherListScreenState extends State<PublisherListScreen> {
                 );
               },
             ),
-
           if (result.total > 0)
             PaginationControls(
               page: result.page,

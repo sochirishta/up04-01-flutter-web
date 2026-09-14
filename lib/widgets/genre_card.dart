@@ -5,9 +5,9 @@ import '../models/genre.dart';
 class GenreCard extends StatelessWidget {
   final Genre genre;
   final bool selected;
-  final VoidCallback onSelectionChanged;
+  final VoidCallback? onSelectionChanged;
   final VoidCallback onOpen;
-  final VoidCallback onEdit;
+  final VoidCallback? onEdit;
   final VoidCallback? onRestore;
   final VoidCallback? onHardDelete;
 
@@ -15,15 +15,17 @@ class GenreCard extends StatelessWidget {
     super.key,
     required this.genre,
     required this.selected,
-    required this.onSelectionChanged,
+    this.onSelectionChanged,
     required this.onOpen,
-    required this.onEdit,
+    this.onEdit,
     this.onRestore,
     this.onHardDelete,
   });
 
   @override
   Widget build(BuildContext context) {
+    final selectionCallback = onSelectionChanged;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
@@ -34,13 +36,15 @@ class GenreCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Checkbox(
-                value: selected,
-                onChanged: (_) {
-                  onSelectionChanged();
-                },
-              ),
-              const SizedBox(width: 8),
+              if (selectionCallback != null) ...[
+                Checkbox(
+                  value: selected,
+                  onChanged: (_) {
+                    selectionCallback();
+                  },
+                ),
+                const SizedBox(width: 8),
+              ],
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -51,7 +55,6 @@ class GenreCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text('Описание: ${genre.description}'),
-
                     if (genre.isDeleted) ...[
                       const SizedBox(height: 6),
                       Text(
@@ -62,9 +65,7 @@ class GenreCard extends StatelessWidget {
                         ),
                       ),
                     ],
-
                     const SizedBox(height: 8),
-
                     Wrap(
                       spacing: 4,
                       children: [
