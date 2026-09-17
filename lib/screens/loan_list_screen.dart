@@ -174,87 +174,76 @@ class _LoanListScreenState extends State<LoanListScreen> {
       return const Center(child: Text('Выдачи не найдены'));
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth < 700) {
-          return ListView.builder(
-            itemCount: loans.length,
-            itemBuilder: (context, index) {
-              final loan = loans[index];
+    return EntityTable<Loan>(
+      items: loans,
+      idOf: (loan) => loan.id,
+      selected: const {},
+      sortField: notifier.query.sortField,
+      sortAscending: notifier.query.sortAscending,
+      onSort: notifier.sort,
 
-              return LoanCard(
-                loan: loan,
-                onOpen: () {
-                  context.go('/loans/${loan.id}');
-                },
-                onEdit: canManage
-                    ? () {
-                        context.go('/loans/${loan.id}/edit');
-                      }
-                    : null,
-              );
+      mobileItemBuilder: (loan) => LoanCard(
+        loan: loan,
+        onOpen: () {
+          context.go('/loans/${loan.id}');
+        },
+        onEdit: canManage
+            ? () {
+                context.go('/loans/${loan.id}/edit');
+              }
+            : null,
+      ),
+
+      columns: [
+        TableColumnSpec<Loan>(
+          label: 'ID',
+          numeric: true,
+          build: (loan) => Text('${loan.id}'),
+        ),
+        TableColumnSpec<Loan>(
+          label: 'Читатель',
+          numeric: true,
+          build: (loan) => Text('${loan.readerId}'),
+        ),
+        TableColumnSpec<Loan>(
+          label: 'Книга',
+          numeric: true,
+          build: (loan) => Text('${loan.bookId}'),
+        ),
+        TableColumnSpec<Loan>(
+          label: 'Выдана',
+          sortField: 'issuedAt',
+          build: (loan) => Text(_date(loan.issuedAt)),
+        ),
+        TableColumnSpec<Loan>(
+          label: 'Вернуть до',
+          sortField: 'dueAt',
+          build: (loan) => Text(_date(loan.dueAt)),
+        ),
+        TableColumnSpec<Loan>(
+          label: 'Статус',
+          sortField: 'status',
+          build: (loan) => Text(loan.status),
+        ),
+      ],
+
+      actions: (loan) => [
+        IconButton(
+          tooltip: 'Открыть',
+          onPressed: () {
+            context.go('/loans/${loan.id}');
+          },
+          icon: const Icon(Icons.open_in_new),
+        ),
+        if (canManage)
+          IconButton(
+            tooltip: 'Редактировать',
+            onPressed: () {
+              context.go('/loans/${loan.id}/edit');
             },
-          );
-        }
-
-        return EntityTable<Loan>(
-          columns: [
-            TableColumnSpec<Loan>(
-              label: 'ID',
-              numeric: true,
-              build: (loan) => Text('${loan.id}'),
-            ),
-            TableColumnSpec<Loan>(
-              label: 'Читатель',
-              numeric: true,
-              build: (loan) => Text('${loan.readerId}'),
-            ),
-            TableColumnSpec<Loan>(
-              label: 'Книга',
-              numeric: true,
-              build: (loan) => Text('${loan.bookId}'),
-            ),
-            TableColumnSpec<Loan>(
-              label: 'Выдана',
-              sortField: 'issuedAt',
-              build: (loan) => Text(_date(loan.issuedAt)),
-            ),
-            TableColumnSpec<Loan>(
-              label: 'Вернуть до',
-              sortField: 'dueAt',
-              build: (loan) => Text(_date(loan.dueAt)),
-            ),
-            TableColumnSpec<Loan>(
-              label: 'Статус',
-              sortField: 'status',
-              build: (loan) => Text(loan.status),
-            ),
-          ],
-          items: loans,
-          idOf: (loan) => loan.id,
-          selected: const {},
-          sortField: notifier.query.sortField,
-          sortAscending: notifier.query.sortAscending,
-          onSort: notifier.sort,
-          actions: (loan) => [
-            IconButton(
-              tooltip: 'Открыть',
-              onPressed: () {
-                context.go('/loans/${loan.id}');
-              },
-              icon: const Icon(Icons.open_in_new),
-            ),
-            if (canManage)
-              IconButton(
-                tooltip: 'Редактировать',
-                onPressed: () {
-                  context.go('/loans/${loan.id}/edit');
-                },
-                icon: const Icon(Icons.edit),
-              ),
-          ],
-        );
-      },
+            icon: const Icon(Icons.edit),
+          ),
+      ],
     );
   }
 

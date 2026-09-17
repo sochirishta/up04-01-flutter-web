@@ -25,6 +25,8 @@ class EntityTable<T> extends StatelessWidget {
   final void Function(String field)? onSort;
   final List<Widget> Function(T item)? actions;
 
+  final Widget Function(T item)? mobileItemBuilder;
+
   const EntityTable({
     super.key,
     required this.columns,
@@ -36,10 +38,19 @@ class EntityTable<T> extends StatelessWidget {
     this.sortAscending = true,
     this.onSort,
     this.actions,
+    this.mobileItemBuilder,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
+
+    if (isMobile && mobileItemBuilder != null) {
+      return Column(
+        children: [for (final item in items) mobileItemBuilder!(item)],
+      );
+    }
+
     final tableColumns = <DataColumn>[
       for (final column in columns)
         DataColumn(
@@ -60,39 +71,31 @@ class EntityTable<T> extends StatelessWidget {
         : columns.indexWhere((column) => column.sortField == sortField);
 
     return SingleChildScrollView(
-      scrollDirection: Axis.vertical,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minWidth: MediaQuery.sizeOf(context).width,
-          ),
-          child: DataTable(
-            sortColumnIndex: sortIndex >= 0 ? sortIndex : null,
-            sortAscending: sortAscending,
-            showCheckboxColumn: onToggleSelect != null,
-            columns: tableColumns,
-            rows: [
-              for (final item in items)
-                DataRow(
-                  selected: selected.contains(idOf(item)),
-                  onSelectChanged: onToggleSelect != null
-                      ? (_) => onToggleSelect!(idOf(item))
-                      : null,
-                  cells: [
-                    for (final column in columns) DataCell(column.build(item)),
-                    if (actions != null)
-                      DataCell(
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: actions!(item),
-                        ),
-                      ),
-                  ],
-                ),
-            ],
-          ),
-        ),
+      scrollDirection: Axis.horizontal,
+      child: DataTable(
+        sortColumnIndex: sortIndex >= 0 ? sortIndex : null,
+        sortAscending: sortAscending,
+        showCheckboxColumn: onToggleSelect != null,
+        columns: tableColumns,
+        rows: [
+          for (final item in items)
+            DataRow(
+              selected: selected.contains(idOf(item)),
+              onSelectChanged: onToggleSelect != null
+                  ? (_) => onToggleSelect!(idOf(item))
+                  : null,
+              cells: [
+                for (final column in columns) DataCell(column.build(item)),
+                if (actions != null)
+                  DataCell(
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: actions!(item),
+                    ),
+                  ),
+              ],
+            ),
+        ],
       ),
     );
   }

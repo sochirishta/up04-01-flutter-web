@@ -171,95 +171,85 @@ class _GenreListScreenState extends State<GenreListScreen> {
           if (result.items.isEmpty)
             const Center(child: Text('Жанры не найдены'))
           else
-            LayoutBuilder(
-              builder: (context, constraints) {
-                if (constraints.maxWidth < 600) {
-                  return Column(
-                    children: result.items
-                        .map(
-                          (genre) => GenreCard(
-                            genre: genre,
-                            selected: notifier.selected.contains(genre.id),
-                            onSelectionChanged: canManage
-                                ? () {
-                                    notifier.toggleSelection(genre.id);
-                                  }
-                                : null,
-                            onOpen: () {
-                              context.go('/genres/${genre.id}');
-                            },
-                            onEdit: canManage
-                                ? () {
-                                    context.go('/genres/${genre.id}/edit');
-                                  }
-                                : null,
-                            onRestore: canAdmin && genre.isDeleted
-                                ? () => notifier.restoreItem(genre.id)
-                                : null,
-                            onHardDelete: canAdmin && genre.isDeleted
-                                ? () => notifier.hardDeleteItem(genre.id)
-                                : null,
-                          ),
-                        )
-                        .toList(),
-                  );
-                }
+            EntityTable<Genre>(
+              items: result.items,
+              selected: notifier.selected,
+              idOf: (genre) => genre.id,
+              onToggleSelect: canManage ? notifier.toggleSelection : null,
+              sortField: query.sortField,
+              sortAscending: query.sortAscending,
+              onSort: notifier.sort,
 
-                return EntityTable<Genre>(
-                  items: result.items,
-                  selected: notifier.selected,
-                  idOf: (genre) => genre.id,
-                  onToggleSelect: canManage ? notifier.toggleSelection : null,
-                  sortField: query.sortField,
-                  sortAscending: query.sortAscending,
-                  onSort: notifier.sort,
-                  columns: [
-                    TableColumnSpec<Genre>(
-                      label: 'Название',
-                      sortField: 'name',
-                      build: (genre) => Text(genre.name),
-                    ),
-                    TableColumnSpec<Genre>(
-                      label: 'Описание',
-                      sortField: 'description',
-                      build: (genre) => Text(genre.description),
-                    ),
-                  ],
-                  actions: (genre) => [
-                    IconButton(
-                      tooltip: 'Открыть',
-                      onPressed: () {
-                        context.go('/genres/${genre.id}');
-                      },
-                      icon: const Icon(Icons.open_in_new),
-                    ),
-                    if (canManage)
-                      IconButton(
-                        tooltip: 'Редактировать',
-                        onPressed: () {
-                          context.go('/genres/${genre.id}/edit');
-                        },
-                        icon: const Icon(Icons.edit),
-                      ),
-                    if (canAdmin && genre.isDeleted)
-                      IconButton(
-                        tooltip: 'Восстановить',
-                        onPressed: () {
-                          notifier.restoreItem(genre.id);
-                        },
-                        icon: const Icon(Icons.restore),
-                      ),
-                    if (canAdmin && genre.isDeleted)
-                      IconButton(
-                        tooltip: 'Удалить окончательно',
-                        onPressed: () {
-                          notifier.hardDeleteItem(genre.id);
-                        },
-                        icon: const Icon(Icons.delete_forever),
-                      ),
-                  ],
-                );
-              },
+              mobileItemBuilder: (genre) => GenreCard(
+                genre: genre,
+                selected: notifier.selected.contains(genre.id),
+                onSelectionChanged: canManage
+                    ? () {
+                        notifier.toggleSelection(genre.id);
+                      }
+                    : null,
+                onOpen: () {
+                  context.go('/genres/${genre.id}');
+                },
+                onEdit: canManage
+                    ? () {
+                        context.go('/genres/${genre.id}/edit');
+                      }
+                    : null,
+                onRestore: canAdmin && genre.isDeleted
+                    ? () => notifier.restoreItem(genre.id)
+                    : null,
+                onHardDelete: canAdmin && genre.isDeleted
+                    ? () => notifier.hardDeleteItem(genre.id)
+                    : null,
+              ),
+
+              columns: [
+                TableColumnSpec<Genre>(
+                  label: 'Название',
+                  sortField: 'name',
+                  build: (genre) => Text(genre.name),
+                ),
+                TableColumnSpec<Genre>(
+                  label: 'Описание',
+                  sortField: 'description',
+                  build: (genre) => Text(genre.description),
+                ),
+              ],
+
+              actions: (genre) => [
+                IconButton(
+                  tooltip: 'Открыть',
+                  onPressed: () {
+                    context.go('/genres/${genre.id}');
+                  },
+                  icon: const Icon(Icons.open_in_new),
+                ),
+                if (canManage)
+                  IconButton(
+                    tooltip: 'Редактировать',
+                    onPressed: () {
+                      context.go('/genres/${genre.id}/edit');
+                    },
+                    icon: const Icon(Icons.edit),
+                  ),
+                if (canAdmin && genre.isDeleted)
+                  IconButton(
+                    tooltip: 'Восстановить',
+                    onPressed: () {
+                      notifier.restoreItem(genre.id);
+                    },
+                    icon: const Icon(Icons.restore),
+                  ),
+                if (canAdmin && genre.isDeleted)
+                  IconButton(
+                    tooltip: 'Удалить окончательно',
+                    onPressed: () {
+                      notifier.hardDeleteItem(genre.id);
+                    },
+                    icon: const Icon(Icons.delete_forever),
+                  ),
+              ],
             ),
           if (result.total > 0)
             PaginationControls(

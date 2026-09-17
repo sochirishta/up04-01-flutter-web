@@ -131,39 +131,83 @@ class EntityForm extends StatelessWidget {
         body: Form(
           key: formKey,
           autovalidateMode: AutovalidateMode.onUserInteraction,
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              ...fields.map(_buildField),
-              ...customFields,
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 700),
+              child: ListView(
+                padding: const EdgeInsets.all(16),
                 children: [
-                  OutlinedButton(
-                    onPressed: isSaving
-                        ? null
-                        : () async {
-                            if (await _confirmLeave(context)) {
-                              onCancel();
-                            }
-                          },
-                    child: const Text('Отмена'),
-                  ),
-                  const SizedBox(width: 12),
-                  FilledButton(
-                    onPressed: isSaving ? null : onSubmit,
-                    child: isSaving
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(isEditing ? 'Сохранить' : 'Создать'),
+                  ...fields.map(_buildField),
+                  ...customFields,
+                  const SizedBox(height: 24),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isNarrow = constraints.maxWidth < 500;
+
+                      if (isNarrow) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            OutlinedButton(
+                              onPressed: isSaving
+                                  ? null
+                                  : () async {
+                                      if (await _confirmLeave(context)) {
+                                        onCancel();
+                                      }
+                                    },
+                              child: const Text('Отмена'),
+                            ),
+                            const SizedBox(height: 12),
+                            FilledButton(
+                              onPressed: isSaving ? null : onSubmit,
+                              child: isSaving
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : Text(isEditing ? 'Сохранить' : 'Создать'),
+                            ),
+                          ],
+                        );
+                      }
+
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          OutlinedButton(
+                            onPressed: isSaving
+                                ? null
+                                : () async {
+                                    if (await _confirmLeave(context)) {
+                                      onCancel();
+                                    }
+                                  },
+                            child: const Text('Отмена'),
+                          ),
+                          const SizedBox(width: 12),
+                          FilledButton(
+                            onPressed: isSaving ? null : onSubmit,
+                            child: isSaving
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Text(isEditing ? 'Сохранить' : 'Создать'),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),

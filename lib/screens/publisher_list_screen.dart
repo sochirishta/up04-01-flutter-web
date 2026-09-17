@@ -180,107 +180,94 @@ class _PublisherListScreenState extends State<PublisherListScreen> {
           if (result.items.isEmpty)
             const Center(child: Text('Издатели не найдены'))
           else
-            LayoutBuilder(
-              builder: (context, constraints) {
-                if (constraints.maxWidth < 600) {
-                  return Column(
-                    children: result.items
-                        .map(
-                          (publisher) => PublisherCard(
-                            publisher: publisher,
-                            selected: notifier.selected.contains(publisher.id),
-                            onSelectionChanged: canManage
-                                ? () {
-                                    notifier.toggleSelection(publisher.id);
-                                  }
-                                : null,
-                            onOpen: () {
-                              context.go('/publishers/${publisher.id}');
-                            },
-                            onEdit: canManage
-                                ? () {
-                                    context.go(
-                                      '/publishers/${publisher.id}/edit',
-                                    );
-                                  }
-                                : null,
-                            onRestore: canAdmin && publisher.isDeleted
-                                ? () {
-                                    notifier.restoreItem(publisher.id);
-                                  }
-                                : null,
-                            onHardDelete: canAdmin && publisher.isDeleted
-                                ? () {
-                                    notifier.hardDeleteItem(publisher.id);
-                                  }
-                                : null,
-                          ),
-                        )
-                        .toList(),
-                  );
-                }
+            EntityTable<Publisher>(
+              items: result.items,
+              selected: notifier.selected,
+              idOf: (publisher) => publisher.id,
+              onToggleSelect: canManage ? notifier.toggleSelection : null,
+              sortField: query.sortField,
+              sortAscending: query.sortAscending,
+              onSort: notifier.sort,
 
-                return EntityTable<Publisher>(
-                  items: result.items,
-                  selected: notifier.selected,
-                  idOf: (publisher) => publisher.id,
-                  onToggleSelect: canManage ? notifier.toggleSelection : null,
-                  sortField: query.sortField,
-                  sortAscending: query.sortAscending,
-                  onSort: notifier.sort,
-                  columns: [
-                    TableColumnSpec<Publisher>(
-                      label: 'Название',
-                      sortField: 'name',
-                      build: (publisher) => Text(publisher.name),
-                    ),
-                    TableColumnSpec<Publisher>(
-                      label: 'Город',
-                      sortField: 'city',
-                      build: (publisher) => Text(publisher.city),
-                    ),
-                    TableColumnSpec<Publisher>(
-                      label: 'Год основания',
-                      sortField: 'foundedYear',
-                      build: (publisher) =>
-                          Text(publisher.foundedYear.toString()),
-                    ),
-                  ],
-                  actions: (publisher) => [
-                    IconButton(
-                      tooltip: 'Открыть',
-                      onPressed: () {
-                        context.go('/publishers/${publisher.id}');
-                      },
-                      icon: const Icon(Icons.open_in_new),
-                    ),
-                    if (canManage)
-                      IconButton(
-                        tooltip: 'Редактировать',
-                        onPressed: () {
-                          context.go('/publishers/${publisher.id}/edit');
-                        },
-                        icon: const Icon(Icons.edit),
-                      ),
-                    if (canAdmin && publisher.isDeleted)
-                      IconButton(
-                        tooltip: 'Восстановить',
-                        onPressed: () {
-                          notifier.restoreItem(publisher.id);
-                        },
-                        icon: const Icon(Icons.restore),
-                      ),
-                    if (canAdmin && publisher.isDeleted)
-                      IconButton(
-                        tooltip: 'Удалить окончательно',
-                        onPressed: () {
-                          notifier.hardDeleteItem(publisher.id);
-                        },
-                        icon: const Icon(Icons.delete_forever),
-                      ),
-                  ],
-                );
-              },
+              mobileItemBuilder: (publisher) => PublisherCard(
+                publisher: publisher,
+                selected: notifier.selected.contains(publisher.id),
+                onSelectionChanged: canManage
+                    ? () {
+                        notifier.toggleSelection(publisher.id);
+                      }
+                    : null,
+                onOpen: () {
+                  context.go('/publishers/${publisher.id}');
+                },
+                onEdit: canManage
+                    ? () {
+                        context.go('/publishers/${publisher.id}/edit');
+                      }
+                    : null,
+                onRestore: canAdmin && publisher.isDeleted
+                    ? () {
+                        notifier.restoreItem(publisher.id);
+                      }
+                    : null,
+                onHardDelete: canAdmin && publisher.isDeleted
+                    ? () {
+                        notifier.hardDeleteItem(publisher.id);
+                      }
+                    : null,
+              ),
+
+              columns: [
+                TableColumnSpec<Publisher>(
+                  label: 'Название',
+                  sortField: 'name',
+                  build: (publisher) => Text(publisher.name),
+                ),
+                TableColumnSpec<Publisher>(
+                  label: 'Город',
+                  sortField: 'city',
+                  build: (publisher) => Text(publisher.city),
+                ),
+                TableColumnSpec<Publisher>(
+                  label: 'Год основания',
+                  sortField: 'foundedYear',
+                  build: (publisher) => Text(publisher.foundedYear.toString()),
+                ),
+              ],
+
+              actions: (publisher) => [
+                IconButton(
+                  tooltip: 'Открыть',
+                  onPressed: () {
+                    context.go('/publishers/${publisher.id}');
+                  },
+                  icon: const Icon(Icons.open_in_new),
+                ),
+                if (canManage)
+                  IconButton(
+                    tooltip: 'Редактировать',
+                    onPressed: () {
+                      context.go('/publishers/${publisher.id}/edit');
+                    },
+                    icon: const Icon(Icons.edit),
+                  ),
+                if (canAdmin && publisher.isDeleted)
+                  IconButton(
+                    tooltip: 'Восстановить',
+                    onPressed: () {
+                      notifier.restoreItem(publisher.id);
+                    },
+                    icon: const Icon(Icons.restore),
+                  ),
+                if (canAdmin && publisher.isDeleted)
+                  IconButton(
+                    tooltip: 'Удалить окончательно',
+                    onPressed: () {
+                      notifier.hardDeleteItem(publisher.id);
+                    },
+                    icon: const Icon(Icons.delete_forever),
+                  ),
+              ],
             ),
           if (result.total > 0)
             PaginationControls(

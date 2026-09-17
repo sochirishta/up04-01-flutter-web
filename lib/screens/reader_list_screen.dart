@@ -210,113 +210,102 @@ class _ReaderListScreenState extends State<ReaderListScreen> {
       return const Center(child: Text('Читатели не найдены'));
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth < 700) {
-          return ListView.builder(
-            itemCount: readers.length,
-            itemBuilder: (context, index) {
-              final reader = readers[index];
+    return EntityTable<Reader>(
+      items: readers,
+      idOf: (reader) => reader.id,
+      selected: notifier.selected,
+      onToggleSelect: canManage ? notifier.toggleSelection : null,
+      sortField: notifier.query.sortField,
+      sortAscending: notifier.query.sortAscending,
+      onSort: notifier.sort,
 
-              return ReaderCard(
-                reader: reader,
-                selected: notifier.selected.contains(reader.id),
-                onSelectionChanged: canManage
-                    ? () {
-                        notifier.toggleSelection(reader.id);
-                      }
-                    : null,
-                onOpen: () {
-                  context.go('/readers/${reader.id}');
-                },
-                onEdit: canManage
-                    ? () {
-                        context.go('/readers/${reader.id}/edit');
-                      }
-                    : null,
-                onRestore: canAdmin && reader.isDeleted
-                    ? () {
-                        notifier.restoreItem(reader.id);
-                      }
-                    : null,
-                onHardDelete: canAdmin && reader.isDeleted
-                    ? () {
-                        notifier.hardDeleteItem(reader.id);
-                      }
-                    : null,
-              );
+      mobileItemBuilder: (reader) => ReaderCard(
+        reader: reader,
+        selected: notifier.selected.contains(reader.id),
+        onSelectionChanged: canManage
+            ? () {
+                notifier.toggleSelection(reader.id);
+              }
+            : null,
+        onOpen: () {
+          context.go('/readers/${reader.id}');
+        },
+        onEdit: canManage
+            ? () {
+                context.go('/readers/${reader.id}/edit');
+              }
+            : null,
+        onRestore: canAdmin && reader.isDeleted
+            ? () {
+                notifier.restoreItem(reader.id);
+              }
+            : null,
+        onHardDelete: canAdmin && reader.isDeleted
+            ? () {
+                notifier.hardDeleteItem(reader.id);
+              }
+            : null,
+      ),
+
+      columns: [
+        TableColumnSpec<Reader>(
+          label: 'ID',
+          numeric: true,
+          build: (reader) => Text('${reader.id}'),
+        ),
+        TableColumnSpec<Reader>(
+          label: 'ФИО',
+          sortField: 'fullName',
+          build: (reader) => Text(reader.fullName),
+        ),
+        TableColumnSpec<Reader>(
+          label: 'Email',
+          sortField: 'email',
+          build: (reader) => Text(reader.email),
+        ),
+        TableColumnSpec<Reader>(
+          label: 'Телефон',
+          build: (reader) => Text(reader.phone),
+        ),
+        TableColumnSpec<Reader>(
+          label: 'Номер карты',
+          build: (reader) => Text(reader.card?.number ?? '—'),
+        ),
+      ],
+
+      actions: (reader) => [
+        IconButton(
+          tooltip: 'Открыть',
+          onPressed: () {
+            context.go('/readers/${reader.id}');
+          },
+          icon: const Icon(Icons.open_in_new),
+        ),
+        if (canManage)
+          IconButton(
+            tooltip: 'Редактировать',
+            onPressed: () {
+              context.go('/readers/${reader.id}/edit');
             },
-          );
-        }
-
-        return EntityTable<Reader>(
-          columns: [
-            TableColumnSpec<Reader>(
-              label: 'ID',
-              numeric: true,
-              build: (reader) => Text('${reader.id}'),
-            ),
-            TableColumnSpec<Reader>(
-              label: 'ФИО',
-              sortField: 'fullName',
-              build: (reader) => Text(reader.fullName),
-            ),
-            TableColumnSpec<Reader>(
-              label: 'Email',
-              sortField: 'email',
-              build: (reader) => Text(reader.email),
-            ),
-            TableColumnSpec<Reader>(
-              label: 'Телефон',
-              build: (reader) => Text(reader.phone),
-            ),
-            TableColumnSpec<Reader>(
-              label: 'Номер карты',
-              build: (reader) => Text(reader.card?.number ?? '—'),
-            ),
-          ],
-          items: readers,
-          idOf: (reader) => reader.id,
-          selected: notifier.selected,
-          onToggleSelect: canManage ? notifier.toggleSelection : null,
-          sortField: notifier.query.sortField,
-          sortAscending: notifier.query.sortAscending,
-          onSort: notifier.sort,
-          actions: (reader) => [
-            IconButton(
-              tooltip: 'Открыть',
-              onPressed: () {
-                context.go('/readers/${reader.id}');
-              },
-              icon: const Icon(Icons.open_in_new),
-            ),
-            if (canManage)
-              IconButton(
-                tooltip: 'Редактировать',
-                onPressed: () {
-                  context.go('/readers/${reader.id}/edit');
-                },
-                icon: const Icon(Icons.edit),
-              ),
-            if (canAdmin && reader.isDeleted)
-              IconButton(
-                tooltip: 'Восстановить',
-                onPressed: () {
-                  notifier.restoreItem(reader.id);
-                },
-                icon: const Icon(Icons.restore),
-              ),
-            if (canAdmin && reader.isDeleted)
-              IconButton(
-                tooltip: 'Удалить окончательно',
-                onPressed: () {
-                  notifier.hardDeleteItem(reader.id);
-                },
-                icon: const Icon(Icons.delete_forever),
-              ),
-          ],
-        );
-      },
+            icon: const Icon(Icons.edit),
+          ),
+        if (canAdmin && reader.isDeleted)
+          IconButton(
+            tooltip: 'Восстановить',
+            onPressed: () {
+              notifier.restoreItem(reader.id);
+            },
+            icon: const Icon(Icons.restore),
+          ),
+        if (canAdmin && reader.isDeleted)
+          IconButton(
+            tooltip: 'Удалить окончательно',
+            onPressed: () {
+              notifier.hardDeleteItem(reader.id);
+            },
+            icon: const Icon(Icons.delete_forever),
+          ),
+      ],
     );
   }
 }

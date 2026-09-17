@@ -175,100 +175,90 @@ class _AuthorListScreenState extends State<AuthorListScreen> {
           if (result.items.isEmpty)
             const Center(child: Text('Авторы не найдены'))
           else
-            LayoutBuilder(
-              builder: (context, constraints) {
-                if (constraints.maxWidth < 600) {
-                  return Column(
-                    children: result.items
-                        .map(
-                          (author) => AuthorCard(
-                            author: author,
-                            selected: notifier.selected.contains(author.id),
-                            onSelectionChanged: canManage
-                                ? () {
-                                    notifier.toggleSelection(author.id);
-                                  }
-                                : () {},
-                            onOpen: () {
-                              context.go('/authors/${author.id}');
-                            },
-                            onEdit: canManage
-                                ? () {
-                                    context.go('/authors/${author.id}/edit');
-                                  }
-                                : () {},
-                            onRestore: canAdmin && author.isDeleted
-                                ? () => notifier.restoreItem(author.id)
-                                : null,
-                            onHardDelete: canAdmin && author.isDeleted
-                                ? () => notifier.hardDeleteItem(author.id)
-                                : null,
-                          ),
-                        )
-                        .toList(),
-                  );
-                }
+            EntityTable<Author>(
+              items: result.items,
+              selected: notifier.selected,
+              idOf: (author) => author.id,
+              onToggleSelect: notifier.toggleSelection,
+              sortField: query.sortField,
+              sortAscending: query.sortAscending,
+              onSort: notifier.sort,
 
-                return EntityTable<Author>(
-                  items: result.items,
-                  selected: notifier.selected,
-                  idOf: (author) => author.id,
-                  onToggleSelect: notifier.toggleSelection,
-                  sortField: query.sortField,
-                  sortAscending: query.sortAscending,
-                  onSort: notifier.sort,
-                  columns: [
-                    TableColumnSpec<Author>(
-                      label: 'ФИО',
-                      sortField: 'fullName',
-                      build: (author) => Text(author.fullName),
-                    ),
-                    TableColumnSpec<Author>(
-                      label: 'Год рождения',
-                      sortField: 'birthYear',
-                      build: (author) => Text(author.birthYear.toString()),
-                    ),
-                    TableColumnSpec<Author>(
-                      label: 'Страна',
-                      sortField: 'country',
-                      build: (author) => Text(author.country),
-                    ),
-                  ],
-                  actions: (author) => [
-                    IconButton(
-                      tooltip: 'Открыть',
-                      onPressed: () {
-                        context.go('/authors/${author.id}');
-                      },
-                      icon: const Icon(Icons.open_in_new),
-                    ),
-                    if (canManage)
-                      IconButton(
-                        tooltip: 'Редактировать',
-                        onPressed: () {
-                          context.go('/authors/${author.id}/edit');
-                        },
-                        icon: const Icon(Icons.edit),
-                      ),
-                    if (canAdmin && author.isDeleted)
-                      IconButton(
-                        tooltip: 'Восстановить',
-                        onPressed: () {
-                          notifier.restoreItem(author.id);
-                        },
-                        icon: const Icon(Icons.restore),
-                      ),
-                    if (canAdmin && author.isDeleted)
-                      IconButton(
-                        tooltip: 'Удалить окончательно',
-                        onPressed: () {
-                          notifier.hardDeleteItem(author.id);
-                        },
-                        icon: const Icon(Icons.delete_forever),
-                      ),
-                  ],
-                );
-              },
+              mobileItemBuilder: (author) => AuthorCard(
+                author: author,
+                selected: notifier.selected.contains(author.id),
+                onSelectionChanged: canManage
+                    ? () {
+                        notifier.toggleSelection(author.id);
+                      }
+                    : null,
+                onOpen: () {
+                  context.go('/authors/${author.id}');
+                },
+                onEdit: canManage
+                    ? () {
+                        context.go('/authors/${author.id}/edit');
+                      }
+                    : null,
+                onRestore: canAdmin && author.isDeleted
+                    ? () => notifier.restoreItem(author.id)
+                    : null,
+                onHardDelete: canAdmin && author.isDeleted
+                    ? () => notifier.hardDeleteItem(author.id)
+                    : null,
+              ),
+
+              columns: [
+                TableColumnSpec<Author>(
+                  label: 'ФИО',
+                  sortField: 'fullName',
+                  build: (author) => Text(author.fullName),
+                ),
+                TableColumnSpec<Author>(
+                  label: 'Год рождения',
+                  sortField: 'birthYear',
+                  build: (author) => Text(author.birthYear.toString()),
+                ),
+                TableColumnSpec<Author>(
+                  label: 'Страна',
+                  sortField: 'country',
+                  build: (author) => Text(author.country),
+                ),
+              ],
+
+              actions: (author) => [
+                IconButton(
+                  tooltip: 'Открыть',
+                  onPressed: () {
+                    context.go('/authors/${author.id}');
+                  },
+                  icon: const Icon(Icons.open_in_new),
+                ),
+                if (canManage)
+                  IconButton(
+                    tooltip: 'Редактировать',
+                    onPressed: () {
+                      context.go('/authors/${author.id}/edit');
+                    },
+                    icon: const Icon(Icons.edit),
+                  ),
+                if (canAdmin && author.isDeleted)
+                  IconButton(
+                    tooltip: 'Восстановить',
+                    onPressed: () {
+                      notifier.restoreItem(author.id);
+                    },
+                    icon: const Icon(Icons.restore),
+                  ),
+                if (canAdmin && author.isDeleted)
+                  IconButton(
+                    tooltip: 'Удалить окончательно',
+                    onPressed: () {
+                      notifier.hardDeleteItem(author.id);
+                    },
+                    icon: const Icon(Icons.delete_forever),
+                  ),
+              ],
             ),
           if (result.total > 0)
             PaginationControls(

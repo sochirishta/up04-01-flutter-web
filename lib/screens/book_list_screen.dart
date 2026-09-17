@@ -504,126 +504,118 @@ class _BookListScreenState extends State<BookListScreen> {
               ),
             )
           else
-            LayoutBuilder(
-              builder: (context, constraints) {
-                if (constraints.maxWidth < 600) {
-                  return Column(
-                    children: result.items
-                        .map(
-                          (book) => BookCard(
-                            book: book,
-                            selected: notifier.selected.contains(book.id),
-                            onSelectionChanged: canManage
-                                ? () {
-                                    notifier.toggleSelection(book.id);
-                                  }
-                                : null,
-                            onOpen: () {
-                              context.go('/books/${book.id}');
-                            },
-                            onEdit: canManage
-                                ? () {
-                                    context.go('/books/${book.id}/edit');
-                                  }
-                                : null,
-                            onRestore: canAdmin && book.isDeleted
-                                ? () => notifier.restoreItem(book.id)
-                                : null,
-                            onHardDelete: canAdmin && book.isDeleted
-                                ? () => notifier.hardDeleteItem(book.id)
-                                : null,
-                          ),
-                        )
-                        .toList(),
-                  );
-                }
+            EntityTable<Book>(
+              items: result.items,
+              selected: notifier.selected,
+              idOf: (book) => book.id,
+              onToggleSelect: canManage ? notifier.toggleSelection : null,
+              sortField: query.sortField,
+              sortAscending: query.sortAscending,
+              onSort: notifier.sort,
 
-                return EntityTable<Book>(
-                  items: result.items,
-                  selected: notifier.selected,
-                  idOf: (book) => book.id,
-                  onToggleSelect: canManage ? notifier.toggleSelection : null,
-                  sortField: query.sortField,
-                  sortAscending: query.sortAscending,
-                  onSort: notifier.sort,
-                  columns: [
-                    TableColumnSpec<Book>(
-                      label: 'Название',
-                      sortField: 'title',
-                      build: (book) => Text(book.title),
-                    ),
-                    TableColumnSpec<Book>(
-                      label: 'ISBN',
-                      sortField: 'isbn',
-                      build: (book) => Text(book.isbn),
-                    ),
-                    TableColumnSpec<Book>(
-                      label: 'Год',
-                      sortField: 'year',
-                      numeric: true,
-                      build: (book) => Text('${book.year}'),
-                    ),
-                    TableColumnSpec<Book>(
-                      label: 'Страницы',
-                      sortField: 'pages',
-                      numeric: true,
-                      build: (book) => Text('${book.pages}'),
-                    ),
-                    TableColumnSpec<Book>(
-                      label: 'Авторы',
-                      build: (book) => Text(_authorNames(book)),
-                    ),
-                    TableColumnSpec<Book>(
-                      label: 'Жанры',
-                      build: (book) => Text(_genreNames(book)),
-                    ),
-                    TableColumnSpec<Book>(
-                      label: 'Издательство',
-                      build: (book) => Text(_publisherName(book)),
-                    ),
-                    TableColumnSpec<Book>(
-                      label: 'Экземпляры',
-                      build: (book) => Text(
-                        '${book.copiesAvailable}/'
-                        '${book.copiesTotal}',
-                      ),
-                    ),
-                  ],
-                  actions: (book) => [
-                    IconButton(
-                      tooltip: 'Открыть',
-                      onPressed: () {
-                        context.go('/books/${book.id}');
-                      },
-                      icon: const Icon(Icons.open_in_new),
-                    ),
-                    if (canManage)
-                      IconButton(
-                        tooltip: 'Редактировать',
-                        onPressed: () {
-                          context.go('/books/${book.id}/edit');
-                        },
-                        icon: const Icon(Icons.edit),
-                      ),
-                    if (canAdmin && book.isDeleted)
-                      IconButton(
-                        tooltip: 'Восстановить',
-                        onPressed: () {
-                          notifier.restoreItem(book.id);
-                        },
-                        icon: const Icon(Icons.restore),
-                      ),
-                    if (canAdmin && book.isDeleted)
-                      IconButton(
-                        tooltip: 'Удалить окончательно',
-                        onPressed: () {
-                          notifier.hardDeleteItem(book.id);
-                        },
-                        icon: const Icon(Icons.delete_forever),
-                      ),
-                  ],
-                );
-              },
+              mobileItemBuilder: (book) => BookCard(
+                book: book,
+                selected: notifier.selected.contains(book.id),
+                onSelectionChanged: canManage
+                    ? () {
+                        notifier.toggleSelection(book.id);
+                      }
+                    : null,
+                onOpen: () {
+                  context.go('/books/${book.id}');
+                },
+                onEdit: canManage
+                    ? () {
+                        context.go('/books/${book.id}/edit');
+                      }
+                    : null,
+                onRestore: canAdmin && book.isDeleted
+                    ? () => notifier.restoreItem(book.id)
+                    : null,
+                onHardDelete: canAdmin && book.isDeleted
+                    ? () => notifier.hardDeleteItem(book.id)
+                    : null,
+              ),
+
+              columns: [
+                TableColumnSpec<Book>(
+                  label: 'Название',
+                  sortField: 'title',
+                  build: (book) => Text(
+                    book.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                TableColumnSpec<Book>(
+                  label: 'ISBN',
+                  sortField: 'isbn',
+                  build: (book) => Text(book.isbn),
+                ),
+                TableColumnSpec<Book>(
+                  label: 'Год',
+                  sortField: 'year',
+                  numeric: true,
+                  build: (book) => Text('${book.year}'),
+                ),
+                TableColumnSpec<Book>(
+                  label: 'Страницы',
+                  sortField: 'pages',
+                  numeric: true,
+                  build: (book) => Text('${book.pages}'),
+                ),
+                TableColumnSpec<Book>(
+                  label: 'Авторы',
+                  build: (book) => Text(_authorNames(book)),
+                ),
+                TableColumnSpec<Book>(
+                  label: 'Жанры',
+                  build: (book) => Text(_genreNames(book)),
+                ),
+                TableColumnSpec<Book>(
+                  label: 'Издательство',
+                  build: (book) => Text(_publisherName(book)),
+                ),
+                TableColumnSpec<Book>(
+                  label: 'Экземпляры',
+                  build: (book) =>
+                      Text('${book.copiesAvailable}/${book.copiesTotal}'),
+                ),
+              ],
+
+              actions: (book) => [
+                IconButton(
+                  tooltip: 'Открыть',
+                  onPressed: () {
+                    context.go('/books/${book.id}');
+                  },
+                  icon: const Icon(Icons.open_in_new),
+                ),
+                if (canManage)
+                  IconButton(
+                    tooltip: 'Редактировать',
+                    onPressed: () {
+                      context.go('/books/${book.id}/edit');
+                    },
+                    icon: const Icon(Icons.edit),
+                  ),
+                if (canAdmin && book.isDeleted)
+                  IconButton(
+                    tooltip: 'Восстановить',
+                    onPressed: () {
+                      notifier.restoreItem(book.id);
+                    },
+                    icon: const Icon(Icons.restore),
+                  ),
+                if (canAdmin && book.isDeleted)
+                  IconButton(
+                    tooltip: 'Удалить окончательно',
+                    onPressed: () {
+                      notifier.hardDeleteItem(book.id);
+                    },
+                    icon: const Icon(Icons.delete_forever),
+                  ),
+              ],
             ),
 
           if (result.total > 0)
