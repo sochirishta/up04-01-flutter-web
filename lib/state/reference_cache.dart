@@ -1,37 +1,44 @@
 import 'package:flutter/foundation.dart';
 
-import '../models/author.dart';
-import '../models/author_query.dart';
+import '../models/country.dart';
+import '../models/country_query.dart';
 import '../models/genre.dart';
 import '../models/genre_query.dart';
-import '../models/publisher.dart';
-import '../models/publisher_query.dart';
+import '../models/hall.dart';
+import '../models/hall_query.dart';
+import '../models/person.dart';
+import '../models/person_query.dart';
 
-import '../repositories/author_repository.dart';
+import '../repositories/country_repository.dart';
 import '../repositories/genre_repository.dart';
-import '../repositories/publisher_repository.dart';
+import '../repositories/hall_repository.dart';
+import '../repositories/person_repository.dart';
 
 class ReferenceCache extends ChangeNotifier {
   ReferenceCache(
-    this._authorRepository,
-    this._genreRepository,
-    this._publisherRepository,
-  );
+      this._countryRepository,
+      this._genreRepository,
+      this._hallRepository,
+      this._personRepository,
+      );
 
-  final AuthorRepository _authorRepository;
+  final CountryRepository _countryRepository;
   final GenreRepository _genreRepository;
-  final PublisherRepository _publisherRepository;
+  final HallRepository _hallRepository;
+  final PersonRepository _personRepository;
 
-  List<Author> _authors = [];
+  List<Country> _countries = [];
   List<Genre> _genres = [];
-  List<Publisher> _publishers = [];
+  List<Hall> _halls = [];
+  List<Person> _persons = [];
 
   bool _loaded = false;
   bool _loading = false;
 
-  List<Author> get authors => _authors;
+  List<Country> get countries => _countries;
   List<Genre> get genres => _genres;
-  List<Publisher> get publishers => _publishers;
+  List<Hall> get halls => _halls;
+  List<Person> get persons => _persons;
 
   bool get loaded => _loaded;
   bool get loading => _loading;
@@ -45,21 +52,26 @@ class ReferenceCache extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final authorsResult = await _authorRepository.find(
-        const AuthorQuery(size: 1000),
+      final countriesResult = await _countryRepository.find(
+        const CountryQuery(size: 1000),
       );
 
       final genresResult = await _genreRepository.find(
         const GenreQuery(size: 1000),
       );
 
-      final publishersResult = await _publisherRepository.find(
-        const PublisherQuery(size: 1000),
+      final hallsResult = await _hallRepository.find(
+        const HallQuery(size: 1000),
       );
 
-      _authors = authorsResult.items;
+      final personsResult = await _personRepository.find(
+        const PersonQuery(size: 1000),
+      );
+
+      _countries = countriesResult.items;
       _genres = genresResult.items;
-      _publishers = publishersResult.items;
+      _halls = hallsResult.items;
+      _persons = personsResult.items;
 
       _loaded = true;
     } finally {

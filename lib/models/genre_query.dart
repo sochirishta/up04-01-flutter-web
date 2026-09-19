@@ -27,7 +27,7 @@ class GenreQuery {
       search: search ?? this.search,
       sortField: sortField ?? this.sortField,
       sortAscending: sortAscending ?? this.sortAscending,
-      page: page ?? 1,
+      page: page ?? this.page,
       size: size ?? this.size,
       includeDeleted: includeDeleted ?? this.includeDeleted,
     );

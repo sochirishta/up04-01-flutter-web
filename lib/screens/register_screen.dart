@@ -22,18 +22,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _loading = false;
   bool _obscurePassword = true;
 
-  bool get _passwordHasMinLength => _passwordController.text.length >= 8;
+  bool get _passwordHasMinLength =>
+      _passwordController.text.length >= 8;
 
   bool get _passwordHasDigit =>
       RegExp(r'\d').hasMatch(_passwordController.text);
 
   bool get _passwordHasSpecial => RegExp(
-    r'[!@#$%^&*(),.?":{}|<>_\-\\/\[\]+=;'
-    '`~]',
+    r'[!@#$%^&*(),.?":{}|<>_\-\\/\[\]+=;`~]',
   ).hasMatch(_passwordController.text);
 
   bool get _passwordIsValid =>
-      _passwordHasMinLength && _passwordHasDigit && _passwordHasSpecial;
+      _passwordHasMinLength &&
+          _passwordHasDigit &&
+          _passwordHasSpecial;
 
   @override
   void dispose() {
@@ -48,17 +50,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() {});
   }
 
-  Widget _passwordRequirement({required bool satisfied, required String text}) {
+  Widget _passwordRequirement({
+    required bool satisfied,
+    required String text,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(top: 6),
       child: Row(
         children: [
           Icon(
-            satisfied ? Icons.check_circle : Icons.radio_button_unchecked,
+            satisfied
+                ? Icons.check_circle
+                : Icons.radio_button_unchecked,
             size: 18,
             color: satisfied
                 ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.onSurfaceVariant,
+                : Theme.of(context)
+                .colorScheme
+                .onSurfaceVariant,
           ),
           const SizedBox(width: 8),
           Text(
@@ -66,7 +75,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
             style: TextStyle(
               color: satisfied
                   ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.onSurfaceVariant,
+                  : Theme.of(context)
+                  .colorScheme
+                  .onSurfaceVariant,
             ),
           ),
         ],
@@ -84,7 +95,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      final user = await context.read<AuthNotifier>().register(
+      final success =
+      await context.read<AuthNotifier>().register(
         username: _usernameController.text.trim(),
         password: _passwordController.text,
         email: _emailController.text.trim(),
@@ -95,10 +107,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return;
       }
 
+      if (!success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Не удалось выполнить регистрацию.',
+            ),
+          ),
+        );
+        return;
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text(
-            'Регистрация выполнена. Пользователь ${user.username} создан.',
+            'Регистрация выполнена. Теперь войдите в аккаунт.',
           ),
         ),
       );
@@ -109,16 +132,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return;
       }
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message),
+        ),
+      );
     } catch (_) {
       if (!mounted) {
         return;
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Не удалось выполнить регистрацию.')),
+        const SnackBar(
+          content: Text(
+            'Не удалось выполнить регистрацию.',
+          ),
+        ),
       );
     } finally {
       if (mounted) {
@@ -134,7 +163,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 480),
+          constraints: const BoxConstraints(
+            maxWidth: 480,
+          ),
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Card(
@@ -144,23 +175,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   key: _formKey,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    crossAxisAlignment:
+                    CrossAxisAlignment.stretch,
                     children: [
                       Text(
                         'Регистрация',
-                        style: Theme.of(context).textTheme.headlineMedium,
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium,
                       ),
                       const SizedBox(height: 24),
                       TextFormField(
                         controller: _usernameController,
                         enabled: !_loading,
-                        textInputAction: TextInputAction.next,
+                        textInputAction:
+                        TextInputAction.next,
                         decoration: const InputDecoration(
                           labelText: 'Логин',
                           border: OutlineInputBorder(),
                         ),
                         validator: (value) {
-                          final username = value?.trim() ?? '';
+                          final username =
+                              value?.trim() ?? '';
 
                           if (username.isEmpty) {
                             return 'Введите логин';
@@ -177,13 +213,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       TextFormField(
                         controller: _fullNameController,
                         enabled: !_loading,
-                        textInputAction: TextInputAction.next,
+                        textInputAction:
+                        TextInputAction.next,
                         decoration: const InputDecoration(
                           labelText: 'ФИО',
                           border: OutlineInputBorder(),
                         ),
                         validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
+                          if (value == null ||
+                              value.trim().isEmpty) {
                             return 'Введите ФИО';
                           }
 
@@ -194,14 +232,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       TextFormField(
                         controller: _emailController,
                         enabled: !_loading,
-                        keyboardType: TextInputType.emailAddress,
-                        textInputAction: TextInputAction.next,
+                        keyboardType:
+                        TextInputType.emailAddress,
+                        textInputAction:
+                        TextInputAction.next,
                         decoration: const InputDecoration(
                           labelText: 'Email',
                           border: OutlineInputBorder(),
                         ),
                         validator: (value) {
-                          final email = value?.trim() ?? '';
+                          final email =
+                              value?.trim() ?? '';
 
                           if (email.isEmpty) {
                             return 'Введите email';
@@ -219,20 +260,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         controller: _passwordController,
                         enabled: !_loading,
                         obscureText: _obscurePassword,
-                        textInputAction: TextInputAction.done,
+                        textInputAction:
+                        TextInputAction.done,
                         onChanged: _onPasswordChanged,
                         onFieldSubmitted: (_) => _submit(),
                         decoration: InputDecoration(
                           labelText: 'Пароль',
-                          border: const OutlineInputBorder(),
+                          border:
+                          const OutlineInputBorder(),
                           suffixIcon: IconButton(
                             onPressed: _loading
                                 ? null
                                 : () {
-                                    setState(() {
-                                      _obscurePassword = !_obscurePassword;
-                                    });
-                                  },
+                              setState(() {
+                                _obscurePassword =
+                                !_obscurePassword;
+                              });
+                            },
                             icon: Icon(
                               _obscurePassword
                                   ? Icons.visibility
@@ -251,13 +295,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             return 'Минимум 8 символов';
                           }
 
-                          if (!RegExp(r'\d').hasMatch(password)) {
+                          if (!RegExp(r'\d')
+                              .hasMatch(password)) {
                             return 'Пароль должен содержать цифру';
                           }
 
                           if (!RegExp(
-                            r'[!@#$%^&*(),.?":{}|<>_\-\\/$begin:math:display$$end:math:display$+=;'
-                            '`~]',
+                            r'[!@#$%^&*(),.?":{}|<>_\-\\/$begin:math:display$$end:math:display$+=;`~]',
                           ).hasMatch(password)) {
                             return 'Пароль должен содержать спецсимвол';
                           }
@@ -268,7 +312,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       if (_passwordController.text.isNotEmpty) ...[
                         const SizedBox(height: 8),
                         _passwordRequirement(
-                          satisfied: _passwordHasMinLength,
+                          satisfied:
+                          _passwordHasMinLength,
                           text: 'Минимум 8 символов',
                         ),
                         _passwordRequirement(
@@ -276,29 +321,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           text: 'Хотя бы одна цифра',
                         ),
                         _passwordRequirement(
-                          satisfied: _passwordHasSpecial,
-                          text: 'Хотя бы один специальный символ',
+                          satisfied:
+                          _passwordHasSpecial,
+                          text:
+                          'Хотя бы один специальный символ',
                         ),
                       ],
                       const SizedBox(height: 24),
                       FilledButton(
-                        onPressed: _loading || !_passwordIsValid
+                        onPressed:
+                        _loading || !_passwordIsValid
                             ? null
                             : _submit,
                         child: _loading
                             ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text('Зарегистрироваться'),
+                          width: 20,
+                          height: 20,
+                          child:
+                          CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
+                        )
+                            : const Text(
+                          'Зарегистрироваться',
+                        ),
                       ),
                       const SizedBox(height: 12),
                       TextButton(
-                        onPressed: _loading ? null : () => context.go('/login'),
-                        child: const Text('Уже есть аккаунт? Войти'),
+                        onPressed: _loading
+                            ? null
+                            : () => context.go('/login'),
+                        child: const Text(
+                          'Уже есть аккаунт? Войти',
+                        ),
                       ),
                     ],
                   ),

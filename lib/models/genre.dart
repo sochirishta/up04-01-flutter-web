@@ -1,13 +1,11 @@
 class Genre {
-  final int id;
+  final String id;
   final String name;
-  final String description;
   final DateTime? deletedAt;
 
   const Genre({
     required this.id,
     required this.name,
-    required this.description,
     this.deletedAt,
   });
 
@@ -17,33 +15,38 @@ class Genre {
     return {
       'id': id,
       'name': name,
-      'description': description,
-      'deletedAt': deletedAt?.toIso8601String(),
+      'deletedAt': deletedAt?.toUtc().toIso8601String() ?? '',
     };
   }
 
   factory Genre.fromJson(Map<String, dynamic> json) {
     return Genre(
-      id: json['id'] as int? ?? 0,
+      id: json['id'] as String? ?? '',
       name: json['name'] as String? ?? '',
-      description: json['description'] as String? ?? '',
-      deletedAt: json['deletedAt'] == null
-          ? null
-          : DateTime.tryParse(json['deletedAt'] as String),
+      deletedAt: _readDateTime(json['deletedAt']),
     );
   }
 
   Genre copyWith({
     String? name,
-    String? description,
-    DateTime? deletedAt,
-    bool clearDeletedAt = false,
+    Object? deletedAt = _unset,
   }) {
     return Genre(
       id: id,
       name: name ?? this.name,
-      description: description ?? this.description,
-      deletedAt: clearDeletedAt ? null : (deletedAt ?? this.deletedAt),
+      deletedAt: deletedAt == _unset
+          ? this.deletedAt
+          : deletedAt as DateTime?,
     );
   }
+
+  static DateTime? _readDateTime(dynamic value) {
+    if (value is! String || value.isEmpty) {
+      return null;
+    }
+
+    return DateTime.tryParse(value);
+  }
+
+  static const _unset = Object();
 }

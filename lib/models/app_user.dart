@@ -1,42 +1,37 @@
 enum Role {
-  reader,
-  librarian,
+  viewer,
+  manager,
   admin;
 
   int get level {
     switch (this) {
-      case Role.reader:
+      case Role.viewer:
         return 1;
-      case Role.librarian:
+      case Role.manager:
         return 2;
       case Role.admin:
         return 3;
     }
   }
 
-  String get value => name;
+  bool isAtLeast(Role requiredRole) {
+    return level >= requiredRole.level;
+  }
 
-  static Role fromJson(String value) {
-    switch (value) {
-      case 'reader':
-        return Role.reader;
-      case 'librarian':
-        return Role.librarian;
+  static Role fromJson(dynamic value) {
+    switch (value?.toString()) {
       case 'admin':
         return Role.admin;
+      case 'manager':
+        return Role.manager;
+      case 'viewer':
       default:
-        throw FormatException('Unknown role: $value');
+        return Role.viewer;
     }
   }
 }
 
 class AppUser {
-  final int id;
-  final String username;
-  final String fullName;
-  final Role role;
-  final String? email;
-
   const AppUser({
     required this.id,
     required this.username,
@@ -45,18 +40,48 @@ class AppUser {
     this.email,
   });
 
+  final String id;
+  final String username;
+  final String fullName;
+  final Role role;
+  final String? email;
+
+  bool hasRole(Role requiredRole) {
+    return role.isAtLeast(requiredRole);
+  }
+
+  bool isExactly(Role requiredRole) {
+    return role == requiredRole;
+  }
+
   factory AppUser.fromJson(Map<String, dynamic> json) {
+    final username =
+    (json['username'] ?? json['email'] ?? '').toString();
+
+    final fullName =
+    (json['name'] ?? json['fullName'] ?? username).toString();
+
     return AppUser(
-      id: json['id'] as int,
-      username: json['username'] as String,
-      fullName: json['fullName'] as String? ?? '',
-      role: Role.fromJson(json['role'] as String),
-      email: json['email'] as String?,
+      id: (json['id'] ?? '').toString(),
+      username: username,
+      fullName: fullName,
+      role: Role.fromJson(json['role']),
+      email: json['email']?.toString(),
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'username': username,
+      'name': fullName,
+      'role': role.name,
+      'email': email,
+    };
+  }
+
   AppUser copyWith({
-    int? id,
+    String? id,
     String? username,
     String? fullName,
     Role? role,
@@ -69,23 +94,5 @@ class AppUser {
       role: role ?? this.role,
       email: email ?? this.email,
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'username': username,
-      'fullName': fullName,
-      'role': role.value,
-      if (email != null) 'email': email,
-    };
-  }
-
-  bool hasRole(Role requiredRole) {
-    return role.level >= requiredRole.level;
-  }
-
-  bool isExactly(Role requiredRole) {
-    return role == requiredRole;
   }
 }

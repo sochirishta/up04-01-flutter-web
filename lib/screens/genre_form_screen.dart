@@ -9,9 +9,12 @@ import '../widgets/entity_form.dart';
 import '../widgets/form_field_definition.dart';
 
 class GenreFormScreen extends StatefulWidget {
-  final int? id;
+  final String? id;
 
-  const GenreFormScreen({super.key, this.id});
+  const GenreFormScreen({
+    super.key,
+    this.id,
+  });
 
   bool get isEditing => id != null;
 
@@ -21,12 +24,10 @@ class GenreFormScreen extends StatefulWidget {
 
 class _GenreFormScreenState extends State<GenreFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  bool _hasUnsavedChanges = false;
 
   final _nameController = TextEditingController();
 
-  final _descriptionController = TextEditingController();
-
+  bool _hasUnsavedChanges = false;
   bool _isLoading = false;
   bool _isSaving = false;
 
@@ -42,7 +43,6 @@ class _GenreFormScreenState extends State<GenreFormScreen> {
   @override
   void dispose() {
     _nameController.dispose();
-    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -51,23 +51,36 @@ class _GenreFormScreenState extends State<GenreFormScreen> {
       _isLoading = true;
     });
 
-    final repository = context.read<GenreRepository>();
+    try {
+      final repository = context.read<GenreRepository>();
 
-    final genre = await repository.findById(widget.id!);
+      final genre = await repository.findById(widget.id!);
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    if (genre == null) {
-      context.go('/genres');
-      return;
+      if (genre == null) {
+        context.go('/genres');
+        return;
+      }
+
+      _nameController.text = genre.name;
+
+      setState(() {
+        _isLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$error'),
+        ),
+      );
     }
-
-    _nameController.text = genre.name;
-    _descriptionController.text = genre.description;
-
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   void _markChanged() {
@@ -88,10 +101,7 @@ class _GenreFormScreenState extends State<GenreFormScreen> {
     });
 
     final repository = context.read<GenreRepository>();
-
     final name = _nameController.text.trim();
-
-    final description = _descriptionController.text.trim();
 
     try {
       if (widget.isEditing) {
@@ -102,21 +112,30 @@ class _GenreFormScreenState extends State<GenreFormScreen> {
         }
 
         await repository.update(
-          oldGenre.copyWith(name: name, description: description),
+          oldGenre.copyWith(
+            name: name,
+          ),
         );
       } else {
         await repository.create(
-          Genre(id: 0, name: name, description: description),
+          Genre(
+            id: '',
+            name: name,
+          ),
         );
       }
 
       if (!mounted) return;
 
       context.go('/genres');
-    } catch (e) {
+    } catch (error) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$error'),
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -130,7 +149,9 @@ class _GenreFormScreenState extends State<GenreFormScreen> {
   Widget build(BuildContext context) {
     return EntityForm(
       formKey: _formKey,
-      title: widget.isEditing ? 'Редактирование жанра' : 'Новый жанр',
+      title: widget.isEditing
+          ? 'Редактирование жанра'
+          : 'Новый жанр',
       isEditing: widget.isEditing,
       isLoading: _isLoading,
       isSaving: _isSaving,
@@ -142,16 +163,8 @@ class _GenreFormScreenState extends State<GenreFormScreen> {
           label: 'Название',
           type: FormFieldType.text,
           controller: _nameController,
-          validator: (value) => Validators.maxLength(value, 100),
-          onChanged: (_) => _markChanged(),
-        ),
-
-        FormFieldDefinition(
-          label: 'Описание',
-          type: FormFieldType.text,
-          controller: _descriptionController,
-          maxLines: 5,
-          validator: (value) => Validators.maxLength(value, 500),
+          validator: (value) =>
+              Validators.maxLength(value, 100),
           onChanged: (_) => _markChanged(),
         ),
       ],

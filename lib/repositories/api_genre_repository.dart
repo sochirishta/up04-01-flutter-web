@@ -1,10 +1,10 @@
 import 'package:dio/dio.dart';
-import 'package:up04_01_flutter_web/models/genre.dart';
-import 'package:up04_01_flutter_web/models/genre_query.dart';
-import 'package:up04_01_flutter_web/models/page_result.dart';
-import 'package:up04_01_flutter_web/repositories/genre_repository.dart';
 
 import '../core/api_exceptions.dart';
+import '../models/genre.dart';
+import '../models/genre_query.dart';
+import '../models/page_result.dart';
+import 'genre_repository.dart';
 
 class ApiGenreRepository implements GenreRepository {
   final Dio _dio;
@@ -12,100 +12,146 @@ class ApiGenreRepository implements GenreRepository {
   ApiGenreRepository(this._dio);
 
   @override
-  Future<PageResult<Genre>> find(GenreQuery q, {CancelToken? cancelToken}) {
+  Future<PageResult<Genre>> find(
+      GenreQuery q, {
+        CancelToken? cancelToken,
+      }) {
     return guard(() async {
+      final filters = <String>[];
+
+      if (q.search.trim().isNotEmpty) {
+        final value = q.search.trim().replaceAll('"', r'\"');
+        filters.add('name ~ "$value"');
+      }
+
+      if (!q.includeDeleted) {
+        filters.add('deletedAt = ""');
+      }
+
       final response = await _dio.get(
-        '/genres',
+        '/collections/genres/records',
         queryParameters: {
-          if (q.search.trim().isNotEmpty) 'search': q.search.trim(),
-          'sort': '${q.sortField},${q.sortAscending ? 'asc' : 'desc'}',
           'page': q.page,
-          'size': q.size,
-          if (q.includeDeleted) 'includeDeleted': true,
+          'perPage': q.size,
+          'sort': '${q.sortAscending ? '+' : '-'}${q.sortField}',
+          if (filters.isNotEmpty) 'filter': filters.join(' && '),
         },
         cancelToken: cancelToken,
       );
 
-      final data = response.data as Map<String, dynamic>;
+      return _pageResult(response.data as Map<String, dynamic>);
+    });
+  }
 
-      final items = (data['items'] as List)
-          .map((item) => Genre.fromJson(item as Map<String, dynamic>))
-          .toList();
+  @override
+  Future<Genre?> findById(String id) {
+    return guard(() async {
+      final response = await _dio.get(
+        '/collections/genres/records/$id',
+      );
 
-      return PageResult<Genre>(
-        items: items,
-        page: data['page'] as int,
-        size: data['size'] as int,
-        total: data['total'] as int,
+      return Genre.fromJson(
+        response.data as Map<String, dynamic>,
       );
     });
   }
 
   @override
-  Future<Genre?> findById(int id) {
-    return guard(() async {
-      final response = await _dio.get('/genres/$id');
-
-      return Genre.fromJson(response.data as Map<String, dynamic>);
-    });
-  }
-
-  @override
-  Future<Genre> create(Genre genre) {
+  Future<Genre?> create(Genre genre) {
     return guard(() async {
       final response = await _dio.post(
-        '/genres',
-        data: {'name': genre.name, 'description': genre.description},
+        '/collections/genres/records',
+        data: {
+          'name': genre.name,
+          'deletedAt': '',
+        },
       );
 
-      return Genre.fromJson(response.data as Map<String, dynamic>);
+      return Genre.fromJson(
+        response.data as Map<String, dynamic>,
+      );
     });
   }
 
   @override
-  Future<Genre> update(Genre genre) {
+  Future<Genre?> update(Genre genre) {
     return guard(() async {
-      final response = await _dio.put(
-        '/genres/${genre.id}',
-        data: {'name': genre.name, 'description': genre.description},
+      final response = await _dio.patch(
+        '/collections/genres/records/${genre.id}',
+        data: {
+          'name': genre.name,
+        },
       );
 
-      return Genre.fromJson(response.data as Map<String, dynamic>);
-    });
-  }
-
-  @override
-  Future<void> delete(int id) {
-    return guard(() async {
-      await _dio.delete('/genres/$id');
-    });
-  }
-
-  @override
-  Future<int> deleteMany(List<int> ids) {
-    return guard(() async {
-      final response = await _dio.post(
-        '/genres/bulk-delete',
-        data: {'ids': ids},
+      return Genre.fromJson(
+        response.data as Map<String, dynamic>,
       );
-
-      final data = response.data as Map<String, dynamic>;
-
-      return data['deleted'] as int;
     });
   }
 
   @override
-  Future<void> restore(int id) {
+  Future<void> softDelete(String id) {
     return guard(() async {
-      await _dio.post('/genres/$id/restore');
+      await _dio.patch(
+        '/collections/genres/records/$id',
+        data: {
+          'deletedAt': DateTime.now().toUtc().toIso8601String(),
+        },
+      );
     });
   }
 
   @override
-  Future<void> hardDelete(int id) {
+  Future<void> hardDelete(String id) {
     return guard(() async {
-      await _dio.delete('/genres/$id', queryParameters: {'hard': true});
+      await _dio.delete(
+        '/collections/genres/records/$id',
+      );
     });
+  }
+
+  @override
+  Future<void> restore(String id) {
+    return guard(() async {
+      await _dio.patch(
+        '/collections/genres/records/$id',
+        data: {
+          'deletedAt': '',
+        },
+      );
+    });
+  }
+
+  @override
+  Future<int> deleteMany(List<String> ids) async {
+    var count = 0;
+
+    for (final id in ids) {
+      try {
+        await softDelete(id);
+        count++;
+      } on ApiException {
+        // Continue with the remaining records.
+      }
+    }
+
+    return count;
+  }
+
+  PageResult<Genre> _pageResult(Map<String, dynamic> data) {
+    final items = (data['items'] as List<dynamic>)
+        .map(
+          (item) => Genre.fromJson(
+        item as Map<String, dynamic>,
+      ),
+    )
+        .toList();
+
+    return PageResult<Genre>(
+      items: items,
+      page: (data['page'] as num).toInt(),
+      size: (data['perPage'] as num).toInt(),
+      total: (data['totalItems'] as num).toInt(),
+    );
   }
 }

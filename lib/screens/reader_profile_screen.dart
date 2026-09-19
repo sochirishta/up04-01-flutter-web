@@ -5,8 +5,8 @@ import '../models/app_user.dart';
 import '../state/auth_notifier.dart';
 import '../widgets/app_navigation_drawer.dart';
 
-class ReaderProfileScreen extends StatelessWidget {
-  const ReaderProfileScreen({super.key});
+class MyProfileScreen extends StatelessWidget {
+  const MyProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -14,26 +14,37 @@ class ReaderProfileScreen extends StatelessWidget {
 
     if (user == null) {
       return const Scaffold(
-        body: Center(child: Text('Пользователь не авторизован')),
+        body: Center(
+          child: Text('Пользователь не авторизован'),
+        ),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Мой профиль')),
-      drawer: const AppNavigationDrawer(currentRoute: '/my-profile'),
+      appBar: AppBar(
+        title: const Text('Мой профиль'),
+      ),
+      drawer: const AppNavigationDrawer(
+        currentRoute: '/my-profile',
+      ),
       body: Center(
         child: Card(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 500),
+              constraints: const BoxConstraints(
+                maxWidth: 500,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
                     'Мой профиль',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   _row('Имя', user.fullName),
@@ -59,10 +70,14 @@ class ReaderProfileScreen extends StatelessWidget {
             width: 100,
             child: Text(
               label,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
-          Expanded(child: Text(value)),
+          Expanded(
+            child: Text(value),
+          ),
         ],
       ),
     );
@@ -70,10 +85,10 @@ class ReaderProfileScreen extends StatelessWidget {
 
   String _roleName(Role role) {
     switch (role) {
-      case Role.reader:
-        return 'Читатель';
-      case Role.librarian:
-        return 'Библиотекарь';
+      case Role.viewer:
+        return 'Зритель';
+      case Role.manager:
+        return 'Менеджер';
       case Role.admin:
         return 'Администратор';
     }

@@ -35,14 +35,22 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
       final response = await dio.get(
         '/users',
-        queryParameters: {'page': 1, 'size': 100, 'sort': 'username,asc'},
+        queryParameters: {
+          'page': 1,
+          'size': 100,
+          'sort': 'username,asc',
+        },
       );
 
       final data = response.data as Map<String, dynamic>;
       final items = data['items'] as List<dynamic>;
 
       _users = items
-          .map((item) => AppUser.fromJson(item as Map<String, dynamic>))
+          .map(
+            (item) => AppUser.fromJson(
+          item as Map<String, dynamic>,
+        ),
+      )
           .toList();
     } on DioException catch (e) {
       final exception = mapDioError(e);
@@ -90,14 +98,21 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
           ),
         ],
       ),
-      drawer: const AppNavigationDrawer(currentRoute: '/admin/users'),
-      body: Padding(padding: const EdgeInsets.all(16), child: _buildBody()),
+      drawer: const AppNavigationDrawer(
+        currentRoute: '/admin/users',
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: _buildBody(),
+      ),
     );
   }
 
   Widget _buildBody() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
     }
 
     if (_error != null) {
@@ -105,9 +120,15 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.block, size: 48),
+            const Icon(
+              Icons.block,
+              size: 48,
+            ),
             const SizedBox(height: 16),
-            Text(_error!, textAlign: TextAlign.center),
+            Text(
+              _error!,
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 16),
             FilledButton.icon(
               onPressed: _load,
@@ -120,26 +141,39 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     }
 
     if (_users.isEmpty) {
-      return const Center(child: Text('Пользователи не найдены'));
+      return const Center(
+        child: Text('Пользователи не найдены'),
+      );
     }
 
     return Card(
       child: ListView.separated(
         itemCount: _users.length,
-        separatorBuilder: (_, _) => const Divider(height: 1),
+        separatorBuilder: (_, _) => const Divider(
+          height: 1,
+        ),
         itemBuilder: (context, index) {
           final user = _users[index];
 
+          final initial = user.username.isNotEmpty
+              ? user.username.substring(0, 1).toUpperCase()
+              : '?';
+
           return ListTile(
             leading: CircleAvatar(
-              child: Text(user.username.substring(0, 1).toUpperCase()),
+              child: Text(initial),
             ),
             title: Text(user.fullName),
             subtitle: Text(
-              '@${user.username}\n${user.email ?? 'Email не указан'}',
+              '@${user.username}\n'
+                  '${user.email ?? 'Email не указан'}',
             ),
             isThreeLine: true,
-            trailing: Chip(label: Text(_roleName(user.role))),
+            trailing: Chip(
+              label: Text(
+                _roleName(user.role),
+              ),
+            ),
           );
         },
       ),
@@ -148,10 +182,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
   String _roleName(Role role) {
     switch (role) {
-      case Role.reader:
-        return 'Читатель';
-      case Role.librarian:
-        return 'Библиотекарь';
+      case Role.viewer:
+        return 'Зритель';
+      case Role.manager:
+        return 'Менеджер';
       case Role.admin:
         return 'Администратор';
     }

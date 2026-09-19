@@ -17,12 +17,15 @@ class TableColumnSpec<T> {
 class EntityTable<T> extends StatelessWidget {
   final List<TableColumnSpec<T>> columns;
   final List<T> items;
-  final int Function(T item) idOf;
-  final Set<int> selected;
-  final ValueChanged<int>? onToggleSelect;
+
+  final String Function(T item) idOf;
+  final Set<String> selected;
+  final ValueChanged<String>? onToggleSelect;
+
   final String? sortField;
   final bool sortAscending;
   final void Function(String field)? onSort;
+
   final List<Widget> Function(T item)? actions;
 
   final Widget Function(T item)? mobileItemBuilder;
@@ -32,7 +35,7 @@ class EntityTable<T> extends StatelessWidget {
     required this.columns,
     required this.items,
     required this.idOf,
-    this.selected = const {},
+    this.selected = const <String>{},
     this.onToggleSelect,
     this.sortField,
     this.sortAscending = true,
@@ -47,7 +50,10 @@ class EntityTable<T> extends StatelessWidget {
 
     if (isMobile && mobileItemBuilder != null) {
       return Column(
-        children: [for (final item in items) mobileItemBuilder!(item)],
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final item in items) mobileItemBuilder!(item),
+        ],
       );
     }
 
@@ -63,40 +69,61 @@ class EntityTable<T> extends StatelessWidget {
     ];
 
     if (actions != null) {
-      tableColumns.add(const DataColumn(label: Text('Действия')));
+      tableColumns.add(
+        const DataColumn(
+          label: Text('Действия'),
+        ),
+      );
     }
 
     final sortIndex = sortField == null
         ? -1
-        : columns.indexWhere((column) => column.sortField == sortField);
+        : columns.indexWhere(
+          (column) => column.sortField == sortField,
+    );
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable(
-        sortColumnIndex: sortIndex >= 0 ? sortIndex : null,
-        sortAscending: sortAscending,
-        showCheckboxColumn: onToggleSelect != null,
-        columns: tableColumns,
-        rows: [
-          for (final item in items)
-            DataRow(
-              selected: selected.contains(idOf(item)),
-              onSelectChanged: onToggleSelect != null
-                  ? (_) => onToggleSelect!(idOf(item))
-                  : null,
-              cells: [
-                for (final column in columns) DataCell(column.build(item)),
-                if (actions != null)
-                  DataCell(
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: actions!(item),
-                    ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableWidth = constraints.maxWidth;
+
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minWidth: availableWidth,
+            ),
+            child: DataTable(
+              sortColumnIndex:
+              sortIndex >= 0 ? sortIndex : null,
+              sortAscending: sortAscending,
+              showCheckboxColumn: onToggleSelect != null,
+              columns: tableColumns,
+              rows: [
+                for (final item in items)
+                  DataRow(
+                    selected: selected.contains(idOf(item)),
+                    onSelectChanged: onToggleSelect != null
+                        ? (_) => onToggleSelect!(idOf(item))
+                        : null,
+                    cells: [
+                      for (final column in columns)
+                        DataCell(
+                          column.build(item),
+                        ),
+                      if (actions != null)
+                        DataCell(
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: actions!(item),
+                          ),
+                        ),
+                    ],
                   ),
               ],
             ),
-        ],
-      ),
+          ),
+        );
+      },
     );
   }
 }

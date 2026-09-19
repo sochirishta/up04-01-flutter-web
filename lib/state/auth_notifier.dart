@@ -3,231 +3,259 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../core/api_exceptions.dart';
 import '../core/auth_api.dart';
+import '../core/api_exceptions.dart';
 import '../models/app_user.dart';
 
 class AuthNotifier extends ChangeNotifier {
-  static const _kAccessToken = 'auth_access_token';
-  static const _kRefreshToken = 'auth_refresh_token';
-  static const _kSessionStartedAt = 'auth_session_started_at';
-  static const _kUiRole = 'auth_ui_role';
-  static const _kLastActivity = 'auth_last_activity';
+  AuthNotifier(this._api);
 
-  static const inactivityDuration = Duration(minutes: 3);
-  static const inactivityWarningDuration = Duration(seconds: 30);
-  static const maxSessionDuration = Duration(days: 7);
-
-  final SharedPreferences _prefs;
   final AuthApi _api;
 
-  AuthNotifier(this._prefs, this._api);
+  static const String _kAccessToken = 'auth_access_token';
+  static const String _kSessionStartedAt = 'auth_session_started_at';
 
-  AppUser? _user;
+  static const Duration _inactivityLimit = Duration(minutes: 3);
+  static const Duration _inactivityWarning = Duration(seconds: 30);
+  static const Duration _maxSessionDuration = Duration(days: 7);
+
+  SharedPreferences? _prefs;
+
   String? _accessToken;
+  AppUser? _user;
 
-  Future<String?>? _refreshFuture;
+  bool _initialized = false;
+  bool _loading = false;
+  bool _refreshing = false;
 
-  Timer? _inactivityTimer;
-  Timer? _inactivityWarningTimer;
-  Timer? _maxSessionTimer;
+  DateTime? _sessionStartedAt;
+  DateTime? _lastActivityAt;
 
-  bool _isInactivityWarning = false;
+  Timer? _activityTimer;
+  Future<bool>? _refreshFuture;
+
+  bool _warningShown = false;
 
   AppUser? get user => _user;
 
   String? get accessToken => _accessToken;
 
-  bool get isAuthenticated => _user != null;
-
-  bool get isInactivityWarning => _isInactivityWarning;
-
-  bool has(Role role) {
-    return _user != null && _user!.role.level >= role.level;
+  bool get isAuthenticated {
+    return _accessToken != null && _user != null;
   }
 
-  bool isExactly(Role role) {
-    return _user != null && _user!.role == role;
-  }
+  bool get isLoading => _loading;
 
-  Future<void> restore() async {
-    final access = _prefs.getString(_kAccessToken);
-    final refresh = _prefs.getString(_kRefreshToken);
+  bool get isInitialized => _initialized;
 
-    if (access == null || refresh == null || refresh.isEmpty) {
-      return;
-    }
+  bool get isRefreshing => _refreshing;
 
-    _accessToken = access;
-
-    try {
-      final serverUser = await _api.me(accessToken: _accessToken);
-
-      _user = _applyUiRole(serverUser);
-
-      if (_sessionExpiredByInactivity()) {
-        await _clearSession();
-        return;
-      }
-
-      await _restoreSession();
-    } on UnauthorizedException {
-      try {
-        final newAccessToken = await _refreshWith(refresh);
-
-        if (newAccessToken == null || newAccessToken.isEmpty) {
-          return;
-        }
-
-        final serverUser = await _api.me(accessToken: newAccessToken);
-
-        _user = _applyUiRole(serverUser);
-
-        if (_sessionExpiredByInactivity()) {
-          await _clearSession();
-          return;
-        }
-
-        await _restoreSession();
-      } catch (_) {
-        await _clearSession();
-      }
-    } catch (_) {
-      await _clearSession();
-    }
-
-    notifyListeners();
-  }
-
-  AppUser _applyUiRole(AppUser serverUser) {
-    final storedRole = _prefs.getString(_kUiRole);
-
-    if (storedRole == null) {
-      _prefs.setString(_kUiRole, serverUser.role.value);
-      return serverUser;
-    }
-
-    try {
-      final uiRole = Role.fromJson(storedRole);
-
-      return serverUser.copyWith(role: uiRole);
-    } catch (_) {
-      _prefs.setString(_kUiRole, serverUser.role.value);
-
-      return serverUser;
-    }
-  }
-
-  bool _sessionExpiredByInactivity() {
-    final lastActivity = _prefs.getInt(_kLastActivity);
-
-    if (lastActivity == null) {
-      return false;
-    }
-
-    final elapsed = DateTime.now().difference(
-      DateTime.fromMillisecondsSinceEpoch(lastActivity),
-    );
-
-    return elapsed >= inactivityDuration;
-  }
-
-  Future<AppUser> register({
-    required String username,
-    required String password,
-    required String email,
-    required String fullName,
-  }) {
-    return _api.register(
-      username: username,
-      password: password,
-      email: email,
-      fullName: fullName,
-    );
-  }
-
-  Future<void> login(String username, String password) async {
-    final result = await _api.login(username, password);
-
-    _accessToken = result.accessToken;
-    _user = result.user;
-
-    await _prefs.setString(_kAccessToken, result.accessToken);
-
-    await _prefs.setString(_kRefreshToken, result.refreshToken);
-
-    await _prefs.setString(_kUiRole, result.user.role.value);
-
-    await _prefs.setInt(
-      _kSessionStartedAt,
-      DateTime.now().millisecondsSinceEpoch,
-    );
-
-    await _prefs.setInt(_kLastActivity, DateTime.now().millisecondsSinceEpoch);
-
-    _startSessionTimers();
-
-    notifyListeners();
-  }
-
-  Future<String?> refreshTokens() async {
-    final refresh = _prefs.getString(_kRefreshToken);
-
-    if (refresh == null || refresh.isEmpty) {
-      await _clearSession();
+  Duration? get inactivityRemaining {
+    if (_lastActivityAt == null) {
       return null;
     }
 
-    return _refreshWith(refresh);
-  }
+    final elapsed = DateTime.now().difference(_lastActivityAt!);
+    final remaining = _inactivityLimit - elapsed;
 
-  Future<String?> _refreshWith(String refreshToken) async {
-    final existing = _refreshFuture;
-
-    if (existing != null) {
-      return existing;
+    if (remaining.isNegative) {
+      return Duration.zero;
     }
 
-    final future = _performRefresh(refreshToken);
+    return remaining;
+  }
 
-    _refreshFuture = future;
+  Duration? get sessionRemaining {
+    if (_sessionStartedAt == null) {
+      return null;
+    }
+
+    final elapsed = DateTime.now().difference(_sessionStartedAt!);
+    final remaining = _maxSessionDuration - elapsed;
+
+    if (remaining.isNegative) {
+      return Duration.zero;
+    }
+
+    return remaining;
+  }
+
+  bool hasRole(Role role) {
+    return _user?.hasRole(role) ?? false;
+  }
+
+  bool isExactly(Role role) {
+    return _user?.isExactly(role) ?? false;
+  }
+
+  Future<void> restore() async {
+    if (_initialized) {
+      return;
+    }
+
+    _prefs ??= await SharedPreferences.getInstance();
+
+    final token = _prefs!.getString(_kAccessToken);
+    final sessionStartedRaw = _prefs!.getInt(_kSessionStartedAt);
+
+    if (token == null || token.isEmpty) {
+      _initialized = true;
+      notifyListeners();
+      return;
+    }
+
+    _accessToken = token;
+
+    if (sessionStartedRaw != null) {
+      _sessionStartedAt =
+          DateTime.fromMillisecondsSinceEpoch(sessionStartedRaw);
+    } else {
+      _sessionStartedAt = DateTime.now();
+
+      await _prefs!.setInt(
+        _kSessionStartedAt,
+        _sessionStartedAt!.millisecondsSinceEpoch,
+      );
+    }
+
+    _lastActivityAt = DateTime.now();
+
+    _loading = true;
+    notifyListeners();
 
     try {
-      return await future;
+      final result = await _api.refresh(token);
+
+      _accessToken = result.accessToken;
+      _user = result.user;
+
+      await _saveAccessToken(result.accessToken);
+
+      if (_sessionExpired()) {
+        await _clearSession();
+      } else {
+        _startActivityTimer();
+      }
+    } on UnauthorizedException {
+      await _clearSession();
+    } catch (_) {
+    } finally {
+      _loading = false;
+      _initialized = true;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> login({
+    required String identity,
+    required String password,
+  }) async {
+    _loading = true;
+    notifyListeners();
+
+    try {
+      final result = await _api.login(
+        identity,
+        password,
+      );
+
+      _accessToken = result.accessToken;
+      _user = result.user;
+
+      _sessionStartedAt = DateTime.now();
+      _lastActivityAt = DateTime.now();
+      _warningShown = false;
+
+      await _saveAccessToken(result.accessToken);
+
+      await _prefs!.setInt(
+        _kSessionStartedAt,
+        _sessionStartedAt!.millisecondsSinceEpoch,
+      );
+
+      _startActivityTimer();
+
+      return true;
+    } catch (_) {
+      await _clearSession();
+      return false;
+    } finally {
+      _loading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> register({
+    required String username,
+    required String email,
+    required String password,
+    required String fullName,
+  }) async {
+    _loading = true;
+    notifyListeners();
+
+    try {
+      await _api.register(
+        username: username,
+        email: email,
+        password: password,
+        fullName: fullName,
+      );
+
+      return true;
+    } catch (_) {
+      return false;
+    } finally {
+      _loading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> refreshTokens() async {
+    final token = _accessToken;
+
+    if (token == null || token.isEmpty) {
+      return false;
+    }
+
+    if (_refreshFuture != null) {
+      return _refreshFuture!;
+    }
+
+    _refreshFuture = _performRefresh(token);
+
+    try {
+      return await _refreshFuture!;
     } finally {
       _refreshFuture = null;
     }
   }
 
-  Future<String?> _performRefresh(String refreshToken) async {
+  Future<bool> _performRefresh(String token) async {
+    if (_refreshing) {
+      return isAuthenticated;
+    }
+
+    _refreshing = true;
+    notifyListeners();
+
     try {
-      final result = await _api.refresh(refreshToken);
+      final result = await _api.refresh(token);
 
       _accessToken = result.accessToken;
-
-      final currentUiRole = _prefs.getString(_kUiRole);
-
       _user = result.user;
 
-      if (currentUiRole != null) {
-        try {
-          _user = _user!.copyWith(role: Role.fromJson(currentUiRole));
-        } catch (_) {}
-      }
+      await _saveAccessToken(result.accessToken);
 
-      await _prefs.setString(_kAccessToken, result.accessToken);
-
-      await _prefs.setString(_kRefreshToken, result.refreshToken);
-
-      notifyListeners();
-
-      return result.accessToken;
+      return true;
     } on UnauthorizedException {
       await _clearSession();
-      return null;
+      return false;
     } catch (_) {
-      await _clearSession();
-      return null;
+      return false;
+    } finally {
+      _refreshing = false;
+      notifyListeners();
     }
   }
 
@@ -236,162 +264,110 @@ class AuthNotifier extends ChangeNotifier {
       return;
     }
 
-    final now = DateTime.now().millisecondsSinceEpoch;
+    _lastActivityAt = DateTime.now();
+    _warningShown = false;
 
-    _prefs.setInt(_kLastActivity, now);
+    if (_activityTimer == null) {
+      _startActivityTimer();
+    }
+  }
 
-    _isInactivityWarning = false;
+  bool consumeInactivityWarning() {
+    if (_warningShown) {
+      return false;
+    }
 
-    _inactivityWarningTimer?.cancel();
-    _inactivityWarningTimer = null;
+    final remaining = inactivityRemaining;
 
-    _inactivityTimer?.cancel();
+    if (remaining == null) {
+      return false;
+    }
 
-    _inactivityTimer = Timer(
-      inactivityDuration - inactivityWarningDuration,
-      _showInactivityWarning,
-    );
+    if (remaining <= _inactivityWarning &&
+        remaining > Duration.zero) {
+      _warningShown = true;
+      return true;
+    }
 
+    return false;
+  }
+
+  Future<void> logout() async {
+    await _clearSession();
     notifyListeners();
   }
 
-  void _showInactivityWarning() {
+  Future<void> _saveAccessToken(String token) async {
+    _prefs ??= await SharedPreferences.getInstance();
+
+    await _prefs!.setString(
+      _kAccessToken,
+      token,
+    );
+  }
+
+  Future<void> _clearSession() async {
+    _accessToken = null;
+    _user = null;
+
+    _sessionStartedAt = null;
+    _lastActivityAt = null;
+
+    _warningShown = false;
+
+    _activityTimer?.cancel();
+    _activityTimer = null;
+
+    _prefs ??= await SharedPreferences.getInstance();
+
+    await _prefs!.remove(_kAccessToken);
+    await _prefs!.remove(_kSessionStartedAt);
+  }
+
+  bool _sessionExpired() {
+    if (_sessionStartedAt == null) {
+      return false;
+    }
+
+    return DateTime.now().difference(_sessionStartedAt!) >=
+        _maxSessionDuration;
+  }
+
+  void _startActivityTimer() {
+    _activityTimer?.cancel();
+
+    _activityTimer = Timer.periodic(
+      const Duration(seconds: 10),
+          (_) {
+        _checkSession();
+      },
+    );
+  }
+
+  Future<void> _checkSession() async {
     if (!isAuthenticated) {
       return;
     }
 
-    _isInactivityWarning = true;
-
-    notifyListeners();
-
-    _inactivityWarningTimer = Timer(inactivityWarningDuration, () async {
-      if (isAuthenticated) {
-        await logout();
-      }
-    });
-  }
-
-  void _startSessionTimers() {
-    _cancelSessionTimers();
-
-    _isInactivityWarning = false;
-
-    final lastActivity = _prefs.getInt(_kLastActivity);
-
-    Duration inactivityRemaining = inactivityDuration;
-
-    if (lastActivity != null) {
-      final elapsed = DateTime.now().difference(
-        DateTime.fromMillisecondsSinceEpoch(lastActivity),
-      );
-
-      inactivityRemaining = inactivityDuration - elapsed;
-    }
-
-    if (inactivityRemaining <= Duration.zero) {
-      Future<void>(() => _clearSession());
+    if (_sessionExpired()) {
+      await logout();
       return;
     }
 
-    if (inactivityRemaining <= inactivityWarningDuration) {
-      _showInactivityWarning();
-    } else {
-      _inactivityTimer = Timer(
-        inactivityRemaining - inactivityWarningDuration,
-        _showInactivityWarning,
-      );
-    }
+    final inactivity = inactivityRemaining;
 
-    final startedAt = _prefs.getInt(_kSessionStartedAt);
-
-    if (startedAt == null) {
+    if (inactivity != null &&
+        inactivity <= Duration.zero) {
+      await logout();
       return;
     }
-
-    final sessionStartedAt = DateTime.fromMillisecondsSinceEpoch(startedAt);
-
-    final elapsed = DateTime.now().difference(sessionStartedAt);
-
-    final remaining = maxSessionDuration - elapsed;
-
-    if (remaining <= Duration.zero) {
-      Future<void>(() => _clearSession());
-      return;
-    }
-
-    _maxSessionTimer = Timer(remaining, () async {
-      if (isAuthenticated) {
-        await logout();
-      }
-    });
-  }
-
-  Future<void> _restoreSession() async {
-    final startedAt = _prefs.getInt(_kSessionStartedAt);
-
-    if (startedAt == null) {
-      await _prefs.setInt(
-        _kSessionStartedAt,
-        DateTime.now().millisecondsSinceEpoch,
-      );
-    }
-
-    final lastActivity = _prefs.getInt(_kLastActivity);
-
-    if (lastActivity == null) {
-      await _prefs.setInt(
-        _kLastActivity,
-        DateTime.now().millisecondsSinceEpoch,
-      );
-    }
-
-    _startSessionTimers();
-  }
-
-  void _cancelSessionTimers() {
-    _inactivityTimer?.cancel();
-    _inactivityWarningTimer?.cancel();
-    _maxSessionTimer?.cancel();
-
-    _inactivityTimer = null;
-    _inactivityWarningTimer = null;
-    _maxSessionTimer = null;
-  }
-
-  Future<void> logout() async {
-    if (_accessToken != null) {
-      try {
-        await _api.logout();
-      } catch (_) {}
-    }
-
-    await _clearSession();
-  }
-
-  Future<void> _clearSession() async {
-    _cancelSessionTimers();
-
-    _isInactivityWarning = false;
-
-    _user = null;
-    _accessToken = null;
-
-    await _prefs.remove(_kAccessToken);
-
-    await _prefs.remove(_kRefreshToken);
-
-    await _prefs.remove(_kSessionStartedAt);
-
-    await _prefs.remove(_kUiRole);
-
-    await _prefs.remove(_kLastActivity);
 
     notifyListeners();
   }
 
   @override
   void dispose() {
-    _cancelSessionTimers();
+    _activityTimer?.cancel();
     super.dispose();
   }
 }

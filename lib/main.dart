@@ -3,33 +3,38 @@ import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/api_client.dart';
 import 'core/auth_api.dart';
 
-import 'repositories/api_author_repository.dart';
-import 'repositories/api_book_repository.dart';
+import 'repositories/api_booking_repository.dart';
+import 'repositories/api_country_repository.dart';
 import 'repositories/api_genre_repository.dart';
-import 'repositories/api_loan_repository.dart';
-import 'repositories/api_publisher_repository.dart';
-import 'repositories/api_reader_repository.dart';
+import 'repositories/api_hall_repository.dart';
+import 'repositories/api_movie_repository.dart';
+import 'repositories/api_person_repository.dart';
+import 'repositories/api_session_repository.dart';
+import 'repositories/api_ticket_repository.dart';
 
-import 'repositories/author_repository.dart';
-import 'repositories/book_repository.dart';
+import 'repositories/booking_repository.dart';
+import 'repositories/country_repository.dart';
 import 'repositories/genre_repository.dart';
-import 'repositories/loan_repository.dart';
-import 'repositories/publisher_repository.dart';
-import 'repositories/reader_repository.dart';
+import 'repositories/hall_repository.dart';
+import 'repositories/movie_repository.dart';
+import 'repositories/person_repository.dart';
+import 'repositories/session_repository.dart';
+import 'repositories/ticket_repository.dart';
 
-import 'state/author_list_notifier.dart';
 import 'state/auth_notifier.dart';
-import 'state/book_list_notifier.dart';
+import 'state/booking_list_notifier.dart';
+import 'state/country_list_notifier.dart';
 import 'state/genre_list_notifier.dart';
-import 'state/loan_list_notifier.dart';
-import 'state/publisher_list_notifier.dart';
-import 'state/reader_list_notifier.dart';
+import 'state/hall_list_notifier.dart';
+import 'state/movie_list_notifier.dart';
+import 'state/person_list_notifier.dart';
 import 'state/reference_cache.dart';
+import 'state/session_list_notifier.dart';
+import 'state/ticket_list_notifier.dart';
 
 import 'router.dart';
 
@@ -38,18 +43,22 @@ Future<void> main() async {
 
   usePathUrlStrategy();
 
-  final prefs = await SharedPreferences.getInstance();
-
   final authDio = buildDio();
   final authApi = AuthApi(authDio);
 
-  final authNotifier = AuthNotifier(prefs, authApi);
+  final authNotifier = AuthNotifier(authApi);
 
   await authNotifier.restore();
 
   final dio = buildDio(
     tokenProvider: () => authNotifier.accessToken,
-    refreshToken: authNotifier.refreshTokens,
+    refreshToken: () async {
+      final refreshed = await authNotifier.refreshTokens();
+      if (!refreshed) {
+        return null;
+      }
+      return authNotifier.accessToken;
+    },
   );
 
   final router = buildRouter(authNotifier);
@@ -57,60 +66,91 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider<AuthNotifier>.value(value: authNotifier),
-        Provider<Dio>.value(value: dio),
-        ProxyProvider<Dio, BookRepository>(
-          update: (_, dio, previous) => ApiBookRepository(dio),
+        ChangeNotifierProvider<AuthNotifier>.value(
+          value: authNotifier,
         ),
-        ChangeNotifierProvider<BookListNotifier>(
+
+        Provider<Dio>.value(
+          value: dio,
+        ),
+
+        ProxyProvider<Dio, MovieRepository>(
+          update: (_, dio, previous) => ApiMovieRepository(dio),
+        ),
+        ChangeNotifierProvider<MovieListNotifier>(
           create: (context) =>
-              BookListNotifier(context.read<BookRepository>())..load(),
+          MovieListNotifier(context.read<MovieRepository>())..load(),
         ),
-        ProxyProvider<Dio, AuthorRepository>(
-          update: (_, dio, previous) => ApiAuthorRepository(dio),
-        ),
-        ChangeNotifierProvider<AuthorListNotifier>(
-          create: (context) =>
-              AuthorListNotifier(context.read<AuthorRepository>())..load(),
-        ),
+
         ProxyProvider<Dio, GenreRepository>(
           update: (_, dio, previous) => ApiGenreRepository(dio),
         ),
         ChangeNotifierProvider<GenreListNotifier>(
           create: (context) =>
-              GenreListNotifier(context.read<GenreRepository>())..load(),
+          GenreListNotifier(context.read<GenreRepository>())..load(),
         ),
-        ProxyProvider<Dio, PublisherRepository>(
-          update: (_, dio, previous) => ApiPublisherRepository(dio),
+
+        ProxyProvider<Dio, PersonRepository>(
+          update: (_, dio, previous) => ApiPersonRepository(dio),
         ),
-        ChangeNotifierProvider<PublisherListNotifier>(
+        ChangeNotifierProvider<PersonListNotifier>(
           create: (context) =>
-              PublisherListNotifier(context.read<PublisherRepository>())
-                ..load(),
+          PersonListNotifier(context.read<PersonRepository>())..load(),
         ),
-        ProxyProvider<Dio, ReaderRepository>(
-          update: (_, dio, previous) => ApiReaderRepository(dio),
+
+        ProxyProvider<Dio, CountryRepository>(
+          update: (_, dio, previous) => ApiCountryRepository(dio),
         ),
-        ChangeNotifierProvider<ReaderListNotifier>(
+        ChangeNotifierProvider<CountryListNotifier>(
           create: (context) =>
-              ReaderListNotifier(context.read<ReaderRepository>())..load(),
+          CountryListNotifier(context.read<CountryRepository>())..load(),
         ),
-        ProxyProvider<Dio, LoanRepository>(
-          update: (_, dio, previous) => ApiLoanRepository(dio),
+
+        ProxyProvider<Dio, HallRepository>(
+          update: (_, dio, previous) => ApiHallRepository(dio),
         ),
-        ChangeNotifierProvider<LoanListNotifier>(
+        ChangeNotifierProvider<HallListNotifier>(
           create: (context) =>
-              LoanListNotifier(context.read<LoanRepository>())..load(),
+          HallListNotifier(context.read<HallRepository>())..load(),
         ),
+
+        ProxyProvider<Dio, SessionRepository>(
+          update: (_, dio, previous) => ApiSessionRepository(dio),
+        ),
+        ChangeNotifierProvider<SessionListNotifier>(
+          create: (context) =>
+          SessionListNotifier(context.read<SessionRepository>())..load(),
+        ),
+
+        ProxyProvider<Dio, BookingRepository>(
+          update: (_, dio, previous) => ApiBookingRepository(dio),
+        ),
+        ChangeNotifierProvider<BookingListNotifier>(
+          create: (context) =>
+          BookingListNotifier(context.read<BookingRepository>())..load(),
+        ),
+
+        ProxyProvider<Dio, TicketRepository>(
+          update: (_, dio, previous) => ApiTicketRepository(dio),
+        ),
+        ChangeNotifierProvider<TicketListNotifier>(
+          create: (context) =>
+          TicketListNotifier(context.read<TicketRepository>())..load(),
+        ),
+
         ChangeNotifierProvider<ReferenceCache>(
           create: (context) => ReferenceCache(
-            context.read<AuthorRepository>(),
+            context.read<CountryRepository>(),
             context.read<GenreRepository>(),
-            context.read<PublisherRepository>(),
-          ),
+            context.read<HallRepository>(),
+            context.read<PersonRepository>(),
+          )..load(),
         ),
       ],
-      child: MyApp(router: router, auth: authNotifier),
+      child: MyApp(
+        router: router,
+        auth: authNotifier,
+      ),
     ),
   );
 }
@@ -119,7 +159,11 @@ class MyApp extends StatelessWidget {
   final GoRouter router;
   final AuthNotifier auth;
 
-  const MyApp({super.key, required this.router, required this.auth});
+  const MyApp({
+    super.key,
+    required this.router,
+    required this.auth,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -139,7 +183,10 @@ class _ActivityDetector extends StatefulWidget {
   final AuthNotifier auth;
   final Widget child;
 
-  const _ActivityDetector({required this.auth, required this.child});
+  const _ActivityDetector({
+    required this.auth,
+    required this.child,
+  });
 
   @override
   State<_ActivityDetector> createState() => _ActivityDetectorState();
@@ -153,21 +200,32 @@ class _ActivityDetectorState extends State<_ActivityDetector> {
   }
 
   void _showInactivityWarning() {
-    if (_warningShown || !widget.auth.isInactivityWarning) {
+    if (_warningShown) {
+      return;
+    }
+
+    if (!widget.auth.consumeInactivityWarning()) {
       return;
     }
 
     _warningShown = true;
 
+    final dialogContext = rootNavigatorKey.currentContext;
+
+    if (dialogContext == null) {
+      _warningShown = false;
+      return;
+    }
+
     showDialog<void>(
-      context: rootNavigatorKey.currentContext!,
+      context: dialogContext,
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
           title: const Text('Сессия скоро завершится'),
           content: const Text(
             'Вы давно не проявляли активность.\n\n'
-            'Сессия завершится через 30 секунд.',
+                'Сессия завершится через 30 секунд.',
           ),
           actions: [
             FilledButton(
@@ -203,12 +261,17 @@ class _ActivityDetectorState extends State<_ActivityDetector> {
       return;
     }
 
-    if (!widget.auth.isInactivityWarning || _warningShown) {
+    final remaining = widget.auth.inactivityRemaining;
+
+    if (remaining == null ||
+        remaining > const Duration(seconds: 30) ||
+        remaining <= Duration.zero ||
+        _warningShown) {
       return;
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !widget.auth.isInactivityWarning || _warningShown) {
+      if (!mounted || _warningShown) {
         return;
       }
 

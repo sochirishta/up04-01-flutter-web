@@ -8,7 +8,10 @@ import '../state/auth_notifier.dart';
 class AppNavigationDrawer extends StatelessWidget {
   final String currentRoute;
 
-  const AppNavigationDrawer({super.key, required this.currentRoute});
+  const AppNavigationDrawer({
+    super.key,
+    required this.currentRoute,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -23,8 +26,11 @@ class AppNavigationDrawer extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text(
-                    'Библиотека',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    'Кинотеатр',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   if (auth.user != null) ...[
                     const SizedBox(height: 8),
@@ -37,44 +43,66 @@ class AppNavigationDrawer extends StatelessWidget {
                 ],
               ),
             ),
-            if (auth.isExactly(Role.reader))
-              _item(
-                context,
-                icon: Icons.account_circle,
-                title: 'Мой профиль',
-                route: '/my-profile',
-              ),
+
             _item(
               context,
-              icon: Icons.menu_book,
-              title: 'Книги',
-              route: '/books',
+              icon: Icons.movie,
+              title: 'Фильмы',
+              route: '/movies',
             ),
-            _item(
-              context,
-              icon: Icons.people,
-              title: 'Авторы',
-              route: '/authors',
-            ),
+
             _item(
               context,
               icon: Icons.category,
               title: 'Жанры',
               route: '/genres',
             ),
+
             _item(
               context,
-              icon: Icons.business,
-              title: 'Издательства',
-              route: '/publishers',
+              icon: Icons.person,
+              title: 'Персоны',
+              route: '/persons',
             ),
-            if (auth.has(Role.librarian))
+
+            _item(
+              context,
+              icon: Icons.public,
+              title: 'Страны',
+              route: '/countries',
+            ),
+
+            if (auth.hasRole(Role.manager))
               _item(
                 context,
-                icon: Icons.person,
-                title: 'Читатели',
-                route: '/readers',
+                icon: Icons.meeting_room,
+                title: 'Залы',
+                route: '/halls',
               ),
+
+            _item(
+              context,
+              icon: Icons.schedule,
+              title: 'Сеансы',
+              route: '/sessions',
+            ),
+
+            if (auth.hasRole(Role.manager))
+              _item(
+                context,
+                icon: Icons.event_seat,
+                title: 'Брони',
+                route: '/bookings',
+              ),
+
+            if (auth.hasRole(Role.manager))
+              _item(
+                context,
+                icon: Icons.confirmation_number,
+                title: 'Билеты',
+                route: '/tickets',
+              ),
+
             if (auth.isExactly(Role.admin))
               _item(
                 context,
@@ -82,14 +110,10 @@ class AppNavigationDrawer extends StatelessWidget {
                 title: 'Пользователи',
                 route: '/admin/users',
               ),
-            _item(
-              context,
-              icon: Icons.assignment,
-              title: 'Выдачи',
-              route: '/loans',
-            ),
+
             const Spacer(),
             const Divider(),
+
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Выйти'),
@@ -108,12 +132,14 @@ class AppNavigationDrawer extends StatelessWidget {
   }
 
   Widget _item(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String route,
-  }) {
-    final selected = currentRoute == route;
+      BuildContext context, {
+        required IconData icon,
+        required String title,
+        required String route,
+      }) {
+    final selected =
+        currentRoute == route ||
+            (route != '/' && currentRoute.startsWith('$route/'));
 
     return ListTile(
       leading: Icon(icon),
@@ -131,10 +157,10 @@ class AppNavigationDrawer extends StatelessWidget {
 
   String _roleName(Role role) {
     switch (role) {
-      case Role.reader:
-        return 'Читатель';
-      case Role.librarian:
-        return 'Библиотекарь';
+      case Role.viewer:
+        return 'Зритель';
+      case Role.manager:
+        return 'Менеджер';
       case Role.admin:
         return 'Администратор';
     }

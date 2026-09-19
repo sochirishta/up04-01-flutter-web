@@ -8,9 +8,9 @@ class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Библиотека')),
+      appBar: AppBar(title: const Text('Кинотеатр')),
       drawer: const AppNavigationDrawer(currentRoute: '/'),
-      body: const Center(child: Text('Выберите раздел библиотеки')),
+      body: const Center(child: Text('Выберите раздел кинотеатра')),
     );
   }
 }

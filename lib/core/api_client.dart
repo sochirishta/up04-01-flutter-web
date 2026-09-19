@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import 'api_config.dart';
-import 'api_exceptions.dart';
 
 class GetRetryInterceptor extends Interceptor {
   GetRetryInterceptor(this._dio);
@@ -26,16 +25,17 @@ class GetRetryInterceptor extends Interceptor {
 
   @override
   Future<void> onError(
-    DioException err,
-    ErrorInterceptorHandler handler,
-  ) async {
+      DioException err,
+      ErrorInterceptorHandler handler,
+      ) async {
     if (!_isRetryable(err)) {
       handler.next(err);
       return;
     }
 
     final request = err.requestOptions;
-    final retryCount = (request.extra['retryCount'] as int?) ?? 0;
+    final retryCount =
+        (request.extra['retryCount'] as int?) ?? 0;
 
     if (retryCount >= maxRetries) {
       handler.next(err);
@@ -43,12 +43,14 @@ class GetRetryInterceptor extends Interceptor {
     }
 
     final nextRetry = retryCount + 1;
-    final delay = Duration(milliseconds: 300 * nextRetry);
+    final delay = Duration(
+      milliseconds: 300 * nextRetry,
+    );
 
     if (kDebugMode) {
       debugPrint(
         '[API] GET retry $nextRetry/$maxRetries '
-        'after ${delay.inMilliseconds}ms: ${request.uri}',
+            'after ${delay.inMilliseconds}ms: ${request.uri}',
       );
     }
 
@@ -81,37 +83,44 @@ class AuthInterceptor extends Interceptor {
   final String? Function() tokenProvider;
   final Future<String?> Function() refreshToken;
 
-  bool _isRefreshExcludedRequest(RequestOptions options) {
+  bool _isAuthRequest(RequestOptions options) {
     final path = options.path;
 
-    return path == '/auth/login' ||
-        path == '/auth/register' ||
-        path == '/auth/refresh' ||
-        path == '/auth/logout';
+    return path.contains('/collections/users/auth-with-password') ||
+        path.contains('/collections/users/auth-refresh') ||
+        path.contains('/collections/users/records');
   }
 
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+  void onRequest(
+      RequestOptions options,
+      RequestInterceptorHandler handler,
+      ) {
     final token = tokenProvider();
 
     if (token != null && token.isNotEmpty) {
-      options.headers['Authorization'] = 'Bearer $token';
+      options.headers['Authorization'] = token;
     }
 
     if (kDebugMode) {
-      debugPrint('[API] ${options.method} ${options.uri}');
+      debugPrint(
+        '[API] ${options.method} ${options.uri}',
+      );
     }
 
     handler.next(options);
   }
 
   @override
-  void onResponse(Response response, ResponseInterceptorHandler handler) {
+  void onResponse(
+      Response response,
+      ResponseInterceptorHandler handler,
+      ) {
     if (kDebugMode) {
       debugPrint(
         '[API] ${response.requestOptions.method} '
-        '${response.requestOptions.uri} '
-        '→ ${response.statusCode}',
+            '${response.requestOptions.uri} '
+            '→ ${response.statusCode}',
       );
     }
 
@@ -120,9 +129,9 @@ class AuthInterceptor extends Interceptor {
 
   @override
   Future<void> onError(
-    DioException err,
-    ErrorInterceptorHandler handler,
-  ) async {
+      DioException err,
+      ErrorInterceptorHandler handler,
+      ) async {
     final request = err.requestOptions;
     final response = err.response;
     final status = response?.statusCode;
@@ -130,7 +139,7 @@ class AuthInterceptor extends Interceptor {
     if (kDebugMode) {
       debugPrint(
         '[API] ${request.method} ${request.uri} '
-        '→ ${status ?? err.type}',
+            '→ ${status ?? err.type}',
       );
     }
 
@@ -139,53 +148,34 @@ class AuthInterceptor extends Interceptor {
       return;
     }
 
-    // Login/register/refresh/logout не должны запускать refresh.
-    if (_isRefreshExcludedRequest(request)) {
-      handler.next(
-        DioException(
-          requestOptions: request,
-          response: response,
-          type: DioExceptionType.badResponse,
-          error: mapHttpError(401, response?.data),
-        ),
-      );
+    if (_isAuthRequest(request)) {
+      handler.next(err);
       return;
     }
 
     if (request.extra['authRetry'] == true) {
-      handler.next(
-        DioException(
-          requestOptions: request,
-          response: response,
-          type: DioExceptionType.badResponse,
-          error: mapHttpError(401, response?.data),
-        ),
-      );
+      handler.next(err);
       return;
     }
 
     try {
       final newAccessToken = await refreshToken();
 
-      if (newAccessToken == null || newAccessToken.isEmpty) {
-        handler.next(
-          DioException(
-            requestOptions: request,
-            response: response,
-            type: DioExceptionType.badResponse,
-            error: mapHttpError(401, response?.data),
-          ),
-        );
+      if (newAccessToken == null ||
+          newAccessToken.isEmpty) {
+        handler.next(err);
         return;
       }
 
       request.extra['authRetry'] = true;
-      request.headers['Authorization'] = 'Bearer $newAccessToken';
+
+      request.headers['Authorization'] =
+          newAccessToken;
 
       if (kDebugMode) {
         debugPrint(
           '[API] retry after token refresh: '
-          '${request.method} ${request.uri}',
+              '${request.method} ${request.uri}',
         );
       }
 
@@ -216,9 +206,13 @@ Dio buildDio({
       baseUrl: apiBaseUrl,
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 15),
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+      },
       validateStatus: (status) {
-        return status != null && status >= 200 && status < 300;
+        return status != null &&
+            status >= 200 &&
+            status < 300;
       },
     ),
   );
@@ -226,12 +220,16 @@ Dio buildDio({
   dio.interceptors.add(
     AuthInterceptor(
       dio: dio,
-      tokenProvider: tokenProvider ?? () => null,
-      refreshToken: refreshToken ?? () async => null,
+      tokenProvider:
+      tokenProvider ?? () => null,
+      refreshToken:
+      refreshToken ?? () async => null,
     ),
   );
 
-  dio.interceptors.add(GetRetryInterceptor(dio));
+  dio.interceptors.add(
+    GetRetryInterceptor(dio),
+  );
 
   return dio;
 }

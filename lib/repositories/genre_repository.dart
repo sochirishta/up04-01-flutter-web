@@ -1,22 +1,26 @@
+import 'package:dio/dio.dart';
+
 import '../models/genre.dart';
 import '../models/genre_query.dart';
 import '../models/page_result.dart';
-import 'package:dio/dio.dart';
 
-abstract class GenreRepository {
-  Future<PageResult<Genre>> find(GenreQuery query, {CancelToken? cancelToken});
+abstract interface class GenreRepository {
+  Future<PageResult<Genre>> find(
+      GenreQuery query, {
+        CancelToken? cancelToken,
+      });
 
-  Future<Genre?> findById(int id);
+  Future<Genre?> findById(String id);
 
-  Future<Genre> create(Genre genre);
+  Future<Genre?> create(Genre genre);
 
-  Future<Genre> update(Genre genre);
+  Future<Genre?> update(Genre genre);
 
-  Future<void> delete(int id);
+  Future<void> softDelete(String id);
 
-  Future<int> deleteMany(List<int> ids);
+  Future<void> hardDelete(String id);
 
-  Future<void> restore(int id);
+  Future<void> restore(String id);
 
-  Future<void> hardDelete(int id);
+  Future<int> deleteMany(List<String> ids);
 }
